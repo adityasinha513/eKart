@@ -1,0 +1,3 @@
+# Consul-based bootstrap config was never actually wired up (the discovery starter was
+# commented out in pom.xml and no Consul server exists in this stack). Real configuration
+# now lives in application.yml; this file is kept minimal/unused.

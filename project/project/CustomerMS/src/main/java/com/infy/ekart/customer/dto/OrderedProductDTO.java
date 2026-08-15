@@ -1,0 +1,39 @@
+package com.infy.ekart.customer.dto;
+
+
+public class OrderedProductDTO {
+
+	
+	private Integer orderedProductId;
+	private ProductDTO product;
+	private Integer quantity;
+	private Double unitPrice;
+
+	public Integer getOrderedProductId() {
+		return orderedProductId;
+	}
+	public void setOrderedProductId(Integer orderedProductId) {
+		this.orderedProductId = orderedProductId;
+	}
+	public Double getUnitPrice() {
+		return unitPrice;
+	}
+	public void setUnitPrice(Double unitPrice) {
+		this.unitPrice = unitPrice;
+	}
+
+	public Integer getQuantity() {
+		return quantity;
+	}
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+	public ProductDTO getProduct() {
+		return product;
+	}
+	public void setProduct(ProductDTO product) {
+		this.product = product;
+	}
+	
+	
+}

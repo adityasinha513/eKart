@@ -1,0 +1,6 @@
+resilience4j:
+ circuitbreaker:
+  instances:
+    paymentService:
+    
+    # Add the missing attributes

@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mithai-50: #fdf8f0;
+  --color-mithai-100: #faeed9;
+  --color-mithai-200: #f3dab0;
+  --color-mithai-300: #eabf7c;
+  --color-mithai-400: #e0a04c;
+  --color-mithai-500: #d4842e;
+  --color-mithai-600: #b96922;
+  --color-mithai-700: #94511e;
+  --color-mithai-800: #78421f;
+  --color-mithai-900: #63371d;
+
+  --color-saffron-400: #f5a623;
+  --color-saffron-500: #ec8f0e;
+
+  --color-maroon-600: #7a2035;
+  --color-maroon-700: #611829;
+  --color-maroon-800: #4a1220;
+  --color-maroon-900: #350c17;
+
+  --color-cream-50: #fffdf8;
+  --color-cream-100: #fdf6ea;
+}
+
+:root {
+  font-family: "Poppins", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #3a2418;
+  background: #fffdf8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffdf8 0%, #fdf6ea 100%);
+  color: #3a2418;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+img {
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+::selection {
+  background: #f3dab0;
+  color: #63371d;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

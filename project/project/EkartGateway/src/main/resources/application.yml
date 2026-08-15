@@ -1,0 +1,111 @@
+server:
+  port: 4000
+
+spring:
+  application:
+    name: EkartGateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: http://localhost:3336
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/?(?<segment>.*), /Ekart/customer-api/$\{segment}
+
+        - id: customers
+          uri: http://localhost:3336
+          predicates:
+            - Path=/api/customers/**
+          filters:
+            - RewritePath=/api/customers/?(?<segment>.*), /Ekart/customer-api/$\{segment}
+
+        - id: orders
+          uri: http://localhost:3336
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - RewritePath=/api/orders/?(?<segment>.*), /Ekart/customerorder-api/$\{segment}
+
+        - id: reviews
+          uri: http://localhost:3336
+          predicates:
+            - Path=/api/reviews/**
+          filters:
+            - RewritePath=/api/reviews/?(?<segment>.*), /Ekart/review-api/$\{segment}
+
+        - id: notifications
+          uri: http://localhost:3336
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - RewritePath=/api/notifications/?(?<segment>.*), /Ekart/notification-api/$\{segment}
+
+        - id: admin-customer
+          uri: http://localhost:3336
+          predicates:
+            - Path=/api/admin/orders/**,/api/admin/customers/**,/api/admin/analytics/**,/api/admin/reviews/**
+          filters:
+            - RewritePath=/api/admin/?(?<segment>.*), /Ekart/admin-api/$\{segment}
+
+        - id: products
+          uri: http://localhost:3334
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - RewritePath=/api/products/?(?<segment>.*), /Ekart/product-api/$\{segment}
+
+        - id: categories
+          uri: http://localhost:3334
+          predicates:
+            - Path=/api/categories/**
+          filters:
+            - RewritePath=/api/categories/?(?<segment>.*), /Ekart/category-api/$\{segment}
+
+        - id: offers
+          uri: http://localhost:3334
+          predicates:
+            - Path=/api/offers/**
+          filters:
+            - RewritePath=/api/offers/?(?<segment>.*), /Ekart/offer-api/$\{segment}
+
+        - id: admin-catalog
+          uri: http://localhost:3334
+          predicates:
+            - Path=/api/admin/products/**,/api/admin/categories/**,/api/admin/offers/**
+          filters:
+            - RewritePath=/api/admin/?(?<segment>.*), /Ekart/admin-api/$\{segment}
+
+        - id: cart
+          uri: http://localhost:3335
+          predicates:
+            - Path=/api/cart/**
+          filters:
+            - RewritePath=/api/cart/?(?<segment>.*), /Ekart/customercart-api/$\{segment}
+
+        - id: wishlist
+          uri: http://localhost:3335
+          predicates:
+            - Path=/api/wishlist/**
+          filters:
+            - RewritePath=/api/wishlist/?(?<segment>.*), /Ekart/wishlist-api/$\{segment}
+
+        - id: payments
+          uri: http://localhost:3337
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - RewritePath=/api/payments/?(?<segment>.*), /Ekart/payment-api/$\{segment}
+
+## Security
+# Shared secret attached to every request this Gateway proxies downstream, so services can
+# reject anything that didn't come through here. Must match every downstream service's
+# gateway.shared-secret.
+gateway:
+  shared-secret: ${GATEWAY_SHARED_SECRET:mithai-junction-dev-gateway-secret}
+
+# HS256 signing secret for validating JWTs issued by CustomerMS at login. Must match
+# CustomerMS's jwt.secret.
+jwt:
+  secret: ${JWT_SECRET:mithai-junction-dev-jwt-secret-change-me-please-32bytes}

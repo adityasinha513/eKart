@@ -1,0 +1,12 @@
+#server:
+ #port: 3334
+spring:
+  application:
+    name: CustomerCartMS
+  cloud:
+    consul:
+      discovery:
+        hostname: localhost
+        health-check-url: http://localhost:${server.port}${server.servlet.context-path}/actuator
+      config:
+        enabled: false
