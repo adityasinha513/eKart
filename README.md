@@ -14,37 +14,79 @@
 
 ---
 
-## Live Demo
+## 🌐 Live Demo
 
-The React single-page frontend is continuously deployed directly from the `main` branch to **GitHub Pages**.
+### 1. Public Frontend Demo
 
 - **Live Demo URL**: [https://adityasinha513.github.io/eKart/](https://adityasinha513.github.io/eKart/)
+- **Hosting Platform**: Hosted on **GitHub Pages** (continuous deployment via GitHub Actions on every push to `main`).
 - **GitHub Repository**: [https://github.com/adityasinha513/eKart](https://github.com/adityasinha513/eKart)
+- **Release Version**: [`v1.0.0`](https://github.com/adityasinha513/eKart/releases/tag/v1.0.0)
 
-> **⚠️ Note on Deployment Architecture & Backend Functionality:**
-> GitHub Pages is a static web hosting platform and can only host frontend client applications (HTML/CSS/JS). It cannot run the Java 11 runtime, Spring Boot microservices, or MySQL database.
-> The live GitHub Pages deployment provides the full production customer and admin interface. For live database queries and transaction pipelines, run the Spring Boot microservices locally (using `./start-dev.bat`) or connect the client to a cloud backend via the `VITE_API_GATEWAY_URL` environment configuration.
+This is the deployed **React frontend** single-page application (SPA). It demonstrates the production-compiled customer storefront, component design system, catalogue rendering, pack-size selections, ingredient and allergen disclosure modals, client-side routing, and responsive mobile/desktop layouts.
 
-### 🔑 Demo Credentials (DEMO ONLY)
+> **⚠️ Static Hosting Limitation**: GitHub Pages provides static web hosting for frontend client assets (HTML, CSS, JavaScript) only. It **does not execute** the Java 11 runtime, Spring Boot microservices, or MySQL database.
 
-These dedicated, non-sensitive demo accounts are pre-configured with sample cart items, validated delivery addresses, and completed order history specifically for recruiter, interviewer, and client evaluations.
+---
 
-| Account Type | Portal URL | Email / Username | Password | Role & Permissions |
+### 2. Backend / Transactional Demo Status
+
+The Spring Boot backend microservices and MySQL database are **NOT currently publicly hosted**.
+
+Because the backend microservices run in a local or containerized environment rather than on an active public cloud server, backend-dependent transactional operations **cannot be guaranteed to work from the public GitHub Pages URL alone**:
+
+- **Login** (requires backend authentication and JWT issuance from `CustomerMS`)
+- **Cart persistence** (requires server-side sync with `CustomerCartMS`)
+- **Checkout** (requires server-side Haversine distance validation and order orchestration)
+- **Order creation** (requires pessimistic stock locking in `ProductMS`)
+- **Order history** (requires database queries against `CustomerMS`)
+- **Admin operations** (requires `ROLE_ADMIN` validation and backend fulfillment pipelines)
+
+The public GitHub Pages demo is intended to showcase the production frontend interface, design system, and UI flows. It is not connected to a publicly hosted live database or payment pipeline.
+
+---
+
+> ### 📌 Recruiter / Interviewer Note
+> **The public GitHub Pages URL demonstrates the production React frontend and UI flows. The Spring Boot microservices and MySQL backend are currently configured for local execution and are not publicly hosted. For a fully transactional demonstration, the backend must be started locally or connected to a deployed backend instance.**
+>
+> To run the complete transactional full-stack application locally with all 4 microservices, the API gateway, MySQL, and frontend, run the one-click development startup script:
+> ```bash
+> ./start-dev.bat
+> ```
+> *(See [Local Development Setup](#-local-development-setup) for full step-by-step instructions.)*
+
+---
+
+### 🔑 Demo Credentials
+
+*Dedicated demo credentials for the application when the backend is running/connected:*
+
+| Account Type | Target URL | Demo Email / Username | Demo Password | Scope & Permissions |
 |:---|:---|:---|:---|:---|
-| **Customer Demo** | [`/login`](https://adityasinha513.github.io/eKart/login) | `demo@mithaijunction.com` | `MithaiDemo#2026` | Full customer shopping, cart, checkout, and order history |
-| **Admin Demo** | [`/admin/login`](https://adityasinha513.github.io/eKart/admin/login) | `admin@mithaijunction.dev` | `MithaiV1!Admin#2026` | Shopkeeper dashboard, orders pipeline, stock control, customer registry |
+| **Customer Demo** | [`/login`](https://adityasinha513.github.io/eKart/login) | `demo@mithaijunction.com` | `MithaiDemo#2026` | Customer shopping, cart adjustments, checkout, order history |
+| **Admin Demo** | [`/admin/login`](https://adityasinha513.github.io/eKart/admin/login) | `admin@mithaijunction.dev` | `MithaiV1!Admin#2026` | Shopkeeper dashboard, order fulfillment queue, stock controls, customer registry |
 
-*These credentials are strictly DEMO accounts with non-sensitive sandbox data. No production credentials or secrets are exposed.*
+*These credentials are strictly DEMO accounts with non-sensitive sandbox data for local or connected evaluation. No production secrets, API keys, JWT secrets, database passwords, or personal credentials are exposed.*
+
+---
 
 ### 📋 Instructions for Recruiters & Evaluators
 
-1. **Open demo**: Visit [https://adityasinha513.github.io/eKart/](https://adityasinha513.github.io/eKart/) (or run locally at `http://localhost:5173`).
-2. **Login using demo credentials**: Click **Sign In** and enter `demo@mithaijunction.com` / `MithaiDemo#2026`.
-3. **Browse catalogue**: Explore the 17 handcrafted sweets, namkeens, and beverages. Filter by categories and view product ingredients and allergens.
-4. **Add item to cart**: Select pack size, adjust quantities, and observe real-time cart badge updates.
-5. **Checkout**: Select between **Doorstep Delivery** (with Haversine GPS radius validation) or **Store Pickup**, pick your payment method, and complete the order.
-6. **View order history**: Open **Orders** to see your order placed with full timeline tracking (`PLACED` → `CONFIRMED` → `PREPARING` → `OUT_FOR_DELIVERY` → `DELIVERED`).
-7. **(Optional) Shopkeeper Admin**: Navigate to [`/admin`](https://adityasinha513.github.io/eKart/admin) and log in with `admin@mithaijunction.dev` / `MithaiV1!Admin#2026` to inspect live sales metrics, order queue transitions, and product inventory controls.
+- **Evaluating via Public GitHub Pages**:
+  1. Open [https://adityasinha513.github.io/eKart/](https://adityasinha513.github.io/eKart/).
+  2. Browse the customer storefront, hero banner, category shortcuts, and bestseller listings.
+  3. Explore the catalogue and view product detail modals (ingredients, allergens, shelf life, pack sizes).
+  4. Inspect client-side routing, responsive UI layouts, and design aesthetics.
+  *(Transactional actions like login, checkout, and live order placement require the backend services to be running).*
+
+- **Evaluating the Full Transactional Flow (Local Environment)**:
+  1. Start the stack locally with `./start-dev.bat`.
+  2. Open `http://localhost:5173` in your browser.
+  3. Login using the Customer Demo credentials (`demo@mithaijunction.com` / `MithaiDemo#2026`).
+  4. Browse the catalogue and add items to the cart.
+  5. Proceed to checkout: select **Doorstep Delivery** (with 20 km Haversine GPS radius validation) or **Store Pickup**, and place the order.
+  6. View order history and real-time milestone timeline in **Orders**.
+  7. Navigate to `/admin` and log in using the Admin Demo credentials (`admin@mithaijunction.dev` / `MithaiV1!Admin#2026`) to inspect executive analytics, order queue transitions, and inventory stock controls.
 
 ---
 
@@ -171,6 +213,25 @@ graph TD
     CustomerMS --> DB_Customer
     PaymentMS --> DB_Payment
 ```
+
+### 🌐 Deployment Architecture Distinction
+
+The system maintains a clear separation between public frontend hosting and backend transaction processing:
+
+- **GitHub Pages → React Frontend**:
+  - Serves the compiled **React Single-Page Application (SPA)** static bundle (`HTML / CSS / JavaScript`) via the GitHub Pages CDN.
+  - Renders all client views: landing page, artisanal catalogue, product detail modals, and the admin UI layouts.
+  - Does **not** run the Java 11 runtime, Spring Boot microservices, or MySQL database.
+
+- **Local / Deployable Environment → Spring Cloud Gateway → Microservices → MySQL**:
+  - Executes the complete transactional backend:
+    - **Spring Cloud Gateway (Port 4000)**: Unified entry point, route dispatching, and JWT security filter.
+    - **ProductMS (Port 3334)**: Catalogue governance and pessimistic stock reservations.
+    - **CustomerCartMS (Port 3335)**: Shopping cart persistence and wishlist management.
+    - **CustomerMS (Port 3336)**: User authentication, customer profiles, 20 km Haversine geo-distance check, and order lifecycle.
+    - **PaymentMS (Port 3337)**: Payment order generation, signature verification, and COD status reconciliation.
+    - **MySQL 8 Database (Port 3306)**: Domain relational databases per microservice.
+  - Configured for local one-click execution via `./start-dev.bat` or containerized cloud deployment.
 
 ---
 
@@ -510,12 +571,16 @@ npm run android
 
 ---
 
-## 🔑 Demo Credentials
+## 🔑 Demo Credentials (Local / Connected Backend)
+
+*Dedicated demo credentials for evaluating the application when the backend is running/connected:*
 
 | Role | Username / Email | Password | Access Level |
 |---|---|---|---|
-| **Shopkeeper / Admin** | `admin@mithaijunction.dev` | *Configured via local environment / seed* | Full administrative access to `/admin` dashboard |
-| **Customer** | *Self-registration via UI* | *Configured during registration* | Public storefront, cart, checkout, tracking |
+| **Customer Demo** | `demo@mithaijunction.com` | `MithaiDemo#2026` | Customer storefront, persistent cart, checkout, order history |
+| **Shopkeeper / Admin** | `admin@mithaijunction.dev` | `MithaiV1!Admin#2026` | Full administrative access to `/admin` dashboard, order queue, stock controls |
+
+*Note: These demo accounts are pre-seeded in the database for local execution (e.g. via `./start-dev.bat`). No personal credentials or production secrets are exposed.*
 
 ---
 
