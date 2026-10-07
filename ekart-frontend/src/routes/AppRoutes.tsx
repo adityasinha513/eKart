@@ -29,7 +29,7 @@ const AdminReviews = lazy(() => import("../pages/admin/Reviews"));
 
 export default function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: "16px", padding: "12px 16px" } }} />
       <Suspense fallback={<GlobalLoader />}>
         <Routes>

@@ -14,6 +14,40 @@
 
 ---
 
+## Live Demo
+
+The React single-page frontend is continuously deployed directly from the `main` branch to **GitHub Pages**.
+
+- **Live Demo URL**: [https://adityasinha513.github.io/eKart/](https://adityasinha513.github.io/eKart/)
+- **GitHub Repository**: [https://github.com/adityasinha513/eKart](https://github.com/adityasinha513/eKart)
+
+> **⚠️ Note on Deployment Architecture & Backend Functionality:**
+> GitHub Pages is a static web hosting platform and can only host frontend client applications (HTML/CSS/JS). It cannot run the Java 11 runtime, Spring Boot microservices, or MySQL database.
+> The live GitHub Pages deployment provides the full production customer and admin interface. For live database queries and transaction pipelines, run the Spring Boot microservices locally (using `./start-dev.bat`) or connect the client to a cloud backend via the `VITE_API_GATEWAY_URL` environment configuration.
+
+### 🔑 Demo Credentials (DEMO ONLY)
+
+These dedicated, non-sensitive demo accounts are pre-configured with sample cart items, validated delivery addresses, and completed order history specifically for recruiter, interviewer, and client evaluations.
+
+| Account Type | Portal URL | Email / Username | Password | Role & Permissions |
+|:---|:---|:---|:---|:---|
+| **Customer Demo** | [`/login`](https://adityasinha513.github.io/eKart/login) | `demo@mithaijunction.com` | `MithaiDemo#2026` | Full customer shopping, cart, checkout, and order history |
+| **Admin Demo** | [`/admin/login`](https://adityasinha513.github.io/eKart/admin/login) | `admin@mithaijunction.dev` | `MithaiV1!Admin#2026` | Shopkeeper dashboard, orders pipeline, stock control, customer registry |
+
+*These credentials are strictly DEMO accounts with non-sensitive sandbox data. No production credentials or secrets are exposed.*
+
+### 📋 Instructions for Recruiters & Evaluators
+
+1. **Open demo**: Visit [https://adityasinha513.github.io/eKart/](https://adityasinha513.github.io/eKart/) (or run locally at `http://localhost:5173`).
+2. **Login using demo credentials**: Click **Sign In** and enter `demo@mithaijunction.com` / `MithaiDemo#2026`.
+3. **Browse catalogue**: Explore the 17 handcrafted sweets, namkeens, and beverages. Filter by categories and view product ingredients and allergens.
+4. **Add item to cart**: Select pack size, adjust quantities, and observe real-time cart badge updates.
+5. **Checkout**: Select between **Doorstep Delivery** (with Haversine GPS radius validation) or **Store Pickup**, pick your payment method, and complete the order.
+6. **View order history**: Open **Orders** to see your order placed with full timeline tracking (`PLACED` → `CONFIRMED` → `PREPARING` → `OUT_FOR_DELIVERY` → `DELIVERED`).
+7. **(Optional) Shopkeeper Admin**: Navigate to [`/admin`](https://adityasinha513.github.io/eKart/admin) and log in with `admin@mithaijunction.dev` / `MithaiV1!Admin#2026` to inspect live sales metrics, order queue transitions, and product inventory controls.
+
+---
+
 # 📸 Product Showcase
 
 Real, unedited screenshots captured from the running application across customer shopping journeys and shopkeeper fulfillment workflows.
