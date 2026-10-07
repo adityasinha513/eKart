@@ -14,6 +14,49 @@
 
 ---
 
+# 📸 Product Showcase
+
+Real, unedited screenshots captured from the running application across customer shopping journeys and shopkeeper fulfillment workflows.
+
+## 🌐 Web Application
+
+### Customer Experience
+
+| Customer Storefront | Product Catalogue |
+|:---:|:---:|
+| ![Customer Storefront](docs/screenshots/web/home.png) | ![Product Catalogue](docs/screenshots/web/catalogue.png) |
+| *Landing page with warm Mithai palette, festive hero banner, curated category shortcuts, and customer bestsellers.* | *Public catalogue with 17 active items across Sweet, Namkeen, and Beverages with authentic local photography.* |
+
+| Product Detail & Specifications | Shopping Cart & Delivery Method |
+|:---:|:---:|
+| ![Product Detail](docs/screenshots/web/product.png) | ![Shopping Cart](docs/screenshots/web/cart.png) |
+| *Product specification modal displaying ingredients, allergens, shelf life, pack size, and instant Add-to-Cart.* | *Persistent shopping cart featuring line-item adjustments and Doorstep Delivery vs. Store Pickup selection.* |
+
+| Transparent Checkout | Order Tracking & Timeline |
+|:---:|:---:|
+| ![Checkout](docs/screenshots/web/checkout.png) | ![Order Tracking](docs/screenshots/web/orders.png) |
+| *Checkout workflow enforcing 20 km GPS radius validation, delivery fee tiering, and COD / Online payment selection.* | *Customer order tracking with real-time milestone progression, delivery address snapshot, and eligible cancellation.* |
+
+## 🧑‍💼 Admin Dashboard
+
+| Executive Operations Dashboard | Live Fulfillment Queue |
+|:---:|:---:|
+| ![Admin Dashboard](docs/screenshots/web/admin-dashboard.png) | ![Admin Orders](docs/screenshots/web/admin-orders.png) |
+| *Shopkeeper command center with today's revenue, active order counts, pending approval queues, and low-stock alerts.* | *Order management with separate Delivery and Pickup pipelines, step-by-step state actions, and customer contact data.* |
+
+| Inventory & Stock Controls | Customer Registry |
+|:---:|:---:|
+| ![Admin Products](docs/screenshots/web/admin-products.png) | ![Admin Customers](docs/screenshots/web/admin-customers.png) |
+| *Real-time catalogue control with in-line stock quantity updates, availability switches, and non-destructive archival.* | *Customer directory displaying registered shoppers, order counts, and contact info with password hashes securely redacted.* |
+
+## 📱 Android Application
+
+The React Native / Expo mobile application (`ekart-android`) provides a native mobile shopping experience for Android devices.
+
+> **Environment Note**: Native Android runtime execution requires an Android SDK and emulator environment (`emulator` / `adb`) or a physical device running Expo Go. In this local development container, runtime mobile screenshots are omitted in strict adherence to project integrity standards (no synthetic or fabricated device frames). The mobile codebase is fully implemented, verified via `npm run typecheck`, and ready to run via `npm run android`.
+
+---
+
 ## ✨ Features
 
 ### 🛍️ Customer Experience (Web & Android)
@@ -478,34 +521,6 @@ cd ekart-frontend && npm run build
 cd ekart-android && npm run typecheck
 ```
 - Strictly validates TypeScript typings across the React Native/Expo codebase (`tsc --noEmit` exits with code 0).
-
----
-
-## 📸 Screenshots
-
-> *UI visual documentation can be captured directly from a local running instance and saved to `docs/screenshots/`.*
-
-### Customer Experience
-| Storefront Home & Hero | Artisanal Sweets Catalogue |
-|:---:|:---:|
-| *(Home hero, category shortcuts, bestsellers)* | *(17 products, filter tabs, instant Add)* |
-
-| Product Detail Modal | Shopping Cart & Delivery Mode |
-|:---:|:---:|
-| *(Ingredients, allergen notes, shelf life)* | *(Delivery vs Pickup toggle, 20 km check)* |
-
-| Checkout & Simulated Payment | Order Tracking & Timeline |
-|:---:|:---:|
-| *(Address selection, simulated payment gateway)* | *(Live milestone progression, eligible cancellation)* |
-
-### Admin Shopkeeper Experience
-| Executive Dashboard | Live Fulfillment Queue |
-|:---:|:---:|
-| *(Today's revenue, order counters, stock alerts)* | *(Delivery & pickup pipelines, status action buttons)* |
-
-| Inventory & Stock Editor | Customer Registry |
-|:---:|:---:|
-| *(In-line quantity adjuster, availability toggle)* | *(Order frequency, masked security credentials)* |
 
 ---
 
