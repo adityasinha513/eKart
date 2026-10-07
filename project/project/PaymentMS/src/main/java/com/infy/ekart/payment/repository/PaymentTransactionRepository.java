@@ -10,4 +10,6 @@ public interface PaymentTransactionRepository extends CrudRepository<PaymentTran
 
 	Optional<PaymentTransaction> findByGatewayOrderId(String gatewayOrderId);
 
+	Optional<PaymentTransaction> findFirstByOrderIdOrderByTransactionIdDesc(Integer orderId);
+
 }

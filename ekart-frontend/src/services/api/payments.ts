@@ -9,6 +9,7 @@ export interface PaymentTransaction {
   currency: string;
   status: string;
   razorpayKeyId?: string;
+  simulated: boolean;
 }
 
 export interface RazorpaySuccessResponse {
@@ -41,6 +42,10 @@ export async function verifyPayment(
   return data;
 }
 
+export async function cancelPayment(customerEmailId: string, orderId: number): Promise<void> {
+  await apiClient.post(`/payments/customer/${encodeURIComponent(customerEmailId)}/order/${orderId}/cancel-payment`);
+}
+
 declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
@@ -55,6 +60,19 @@ declare global {
  */
 export function openRazorpayCheckout(transaction: PaymentTransaction, customerName: string, customerEmail: string): Promise<RazorpaySuccessResponse> {
   return new Promise((resolve, reject) => {
+    if (transaction.simulated) {
+      const choice = window.prompt("Demo payment: enter success, failure, or cancel", "success")?.trim().toLowerCase() ?? "cancel";
+      if (!["success", "failure", "cancel"].includes(choice)) {
+        reject(new Error("Enter success, failure, or cancel for the demo payment."));
+        return;
+      }
+      resolve({
+        razorpay_order_id: transaction.gatewayOrderId,
+        razorpay_payment_id: `demo_payment_${transaction.transactionId}`,
+        razorpay_signature: choice === "success" ? "SIMULATED_SUCCESS" : choice === "failure" ? "SIMULATED_FAILURE" : "SIMULATED_CANCEL",
+      });
+      return;
+    }
     const scriptId = "razorpay-checkout-js";
     const openWidget = () => {
       if (!window.Razorpay) {

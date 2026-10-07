@@ -45,6 +45,10 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		ServerHttpRequest request = exchange.getRequest();
+		String path = request.getURI().getPath();
+		// Reservation APIs are internal CustomerMS→ProductMS calls and must never be
+		// reachable through the public catalog route.
+		if (path.startsWith("/api/products/orders/")) return forbidden(exchange, "Internal inventory API.");
 
 		if (publicRouteMatcher.isPublic(request)) {
 			return chain.filter(withGatewaySecret(exchange, request));
@@ -63,11 +67,20 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
 		String emailId = claims.get().getSubject();
 		String role = claims.get().get("role", String.class);
+		if ((path.startsWith("/api/admin/") || path.startsWith("/api/products/update/")) && !"ADMIN".equals(role)) {
+			return forbidden(exchange, "Admin access is required.");
+		}
 
 		ServerHttpRequest mutatedRequest = request.mutate()
-				.header(AUTH_USER_HEADER, emailId)
-				.header(AUTH_ROLE_HEADER, role)
-				.header(GATEWAY_SECRET_HEADER, gatewaySharedSecret)
+				.headers(headers -> {
+					headers.remove(AUTH_USER_HEADER);
+					headers.remove(AUTH_ROLE_HEADER);
+				headers.remove(GATEWAY_SECRET_HEADER);
+				headers.remove("X-Internal-Service");
+					headers.set(AUTH_USER_HEADER, emailId);
+					headers.set(AUTH_ROLE_HEADER, role);
+					headers.set(GATEWAY_SECRET_HEADER, gatewaySharedSecret);
+				})
 				.build();
 
 		return chain.filter(exchange.mutate().request(mutatedRequest).build());
@@ -75,6 +88,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
 	private ServerWebExchange withGatewaySecret(ServerWebExchange exchange, ServerHttpRequest request) {
 		ServerHttpRequest mutatedRequest = request.mutate()
+				.headers(headers -> headers.remove("X-Internal-Service"))
 				.header(GATEWAY_SECRET_HEADER, gatewaySharedSecret)
 				.build();
 		return exchange.mutate().request(mutatedRequest).build();
@@ -86,6 +100,14 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 		response.getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
 		String body = "{\"message\":\"" + message + "\"}";
 		DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
+		return response.writeWith(Mono.just(buffer));
+	}
+
+	private Mono<Void> forbidden(ServerWebExchange exchange, String message) {
+		ServerHttpResponse response = exchange.getResponse();
+		response.setStatusCode(HttpStatus.FORBIDDEN);
+		response.getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
+		DataBuffer buffer = response.bufferFactory().wrap(("{\"message\":\"" + message + "\"}").getBytes(StandardCharsets.UTF_8));
 		return response.writeWith(Mono.just(buffer));
 	}
 

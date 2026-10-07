@@ -1,5 +1,5 @@
 package com.infy.ekart.customer.dto;
 
 public enum PaymentThrough {
-	ONLINE, COD
+	ONLINE, COD, DEBIT_CARD, CREDIT_CARD
 }

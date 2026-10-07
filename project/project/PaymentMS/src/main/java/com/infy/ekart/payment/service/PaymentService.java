@@ -11,4 +11,6 @@ public interface PaymentService {
 	PaymentTransactionDTO verifyPayment(String customerEmailId, VerifyPaymentRequestDTO request)
 			throws EKartPaymentException;
 
+	void cancelPayment(String customerEmailId, Integer orderId) throws EKartPaymentException;
+
 }

@@ -9,7 +9,7 @@ interface EmptyStateProps {
 
 export default function EmptyState({ title, description, action, icon }: EmptyStateProps) {
   return (
-    <div className="rounded-3xl border border-dashed border-mithai-300 bg-mithai-50/50 px-8 py-16 text-center">
+    <div className="rounded-3xl border border-dashed border-mithai-300 bg-mithai-50/50 px-5 py-10 text-center sm:px-8 sm:py-14">
       {icon ? <div className="mb-4 flex justify-center text-maroon-400">{icon}</div> : null}
       <h3 className="text-xl font-semibold text-maroon-900">{title}</h3>
       <p className="mt-3 text-sm text-stone-600">{description}</p>

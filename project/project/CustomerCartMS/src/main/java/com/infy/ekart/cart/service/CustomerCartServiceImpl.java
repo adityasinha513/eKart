@@ -128,16 +128,10 @@ public class CustomerCartServiceImpl implements CustomerCartService {
 		if (cart.getCartProducts().isEmpty()) {
 			throw new EKartCustomerCartException("CustomerCartService.NO_PRODUCT_ADDED_TO_CART");
 		}
-		List<Integer> productIds = new ArrayList<>();
-		cart.getCartProducts().parallelStream().forEach(cp -> {
-			productIds.add(cp.getCartProductId());
-			cart.getCartProducts().remove(cp);
-		});
-
-		productIds.forEach(pid -> {
-
-			cartProductRepository.deleteById(pid);
-		});
+		for (CartProduct product : new ArrayList<>(cart.getCartProducts())) {
+			cart.getCartProducts().remove(product);
+			cartProductRepository.delete(product);
+		}
 
 	}
 

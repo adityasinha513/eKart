@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" role="img" aria-label="Illustration of savoury namkeen snack">
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#fff8ed"/><stop offset="1" stop-color="#f1d5b1"/></linearGradient><linearGradient id="bowl" x2="0" y2="1"><stop stop-color="#9c5630"/><stop offset="1" stop-color="#5c3326"/></linearGradient></defs>
+  <rect width="720" height="540" fill="url(#bg)"/><circle cx="360" cy="250" r="192" fill="#fffaf3" opacity=".72"/>
+  <ellipse cx="360" cy="366" rx="213" ry="70" fill="#c68642"/><path d="M148 346h424c-10 94-82 141-212 141s-202-47-212-141Z" fill="url(#bowl)"/><ellipse cx="360" cy="346" rx="213" ry="73" fill="#e0b084"/><ellipse cx="360" cy="336" rx="181" ry="55" fill="#a96d35"/>
+  <g fill="none" stroke="#f6cf84" stroke-width="10" stroke-linecap="round"><path d="M224 330c33-45 49 41 78-3s49 45 78-1 48 44 78-4 38 24 58 3"/><path d="M249 296c24-33 43 35 67 1s41 30 64-3 43 31 66 0 39 23 56 1"/><path d="M268 357c27-28 43 24 67-4s40 28 67-1 43 24 69-3"/></g>
+  <g fill="#70452d"><circle cx="280" cy="313" r="7"/><circle cx="348" cy="359" r="7"/><circle cx="431" cy="318" r="7"/><circle cx="393" cy="297" r="6"/></g>
+  <g fill="#fff3db"><circle cx="242" cy="255" r="6"/><circle cx="491" cy="250" r="6"/><circle cx="360" cy="174" r="6"/></g>
+</svg>

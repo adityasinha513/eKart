@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" role="img" aria-label="Illustration of a bakery pastry">
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#fff8ed"/><stop offset="1" stop-color="#f1d5b1"/></linearGradient><linearGradient id="pastry" x2="0" y2="1"><stop stop-color="#e5bd8d"/><stop offset="1" stop-color="#b87848"/></linearGradient></defs>
+  <rect width="720" height="540" fill="url(#bg)"/><circle cx="360" cy="250" r="192" fill="#fffaf3" opacity=".72"/><ellipse cx="360" cy="422" rx="197" ry="29" fill="#3d2b1f" opacity=".12"/>
+  <path d="m209 374 72-178h158l72 178Z" fill="url(#pastry)" stroke="#fff4df" stroke-width="11" stroke-linejoin="round"/><path d="M245 286h230l-19 49H226Z" fill="#6e392b"/><path d="M225 334h270l17 40H208Z" fill="#fff4df"/><path d="M276 217c8-49 42-75 84-75s76 26 84 75" fill="#f7e7ce" stroke="#a97142" stroke-width="9"/>
+  <circle cx="322" cy="144" r="15" fill="#a44436"/><circle cx="362" cy="132" r="16" fill="#c1483d"/><circle cx="400" cy="149" r="14" fill="#b43e39"/><path d="M289 259h142m-167 80h194" stroke="#f1d5b1" stroke-width="8" opacity=".8"/><path d="M214 421h292" stroke="#a97142" stroke-width="9" stroke-linecap="round"/>
+</svg>

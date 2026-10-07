@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" role="img" aria-label="Illustration of a refreshing Indian drink">
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#fff8ed"/><stop offset="1" stop-color="#f1d5b1"/></linearGradient><linearGradient id="drink" x2="0" y2="1"><stop stop-color="#f0c17b"/><stop offset="1" stop-color="#bf6b4c"/></linearGradient></defs>
+  <rect width="720" height="540" fill="url(#bg)"/><circle cx="360" cy="253" r="192" fill="#fffaf3" opacity=".72"/>
+  <ellipse cx="360" cy="421" rx="161" ry="29" fill="#a97142" opacity=".15"/><path d="M245 175h230l-28 225c-4 35-34 57-87 57s-83-22-87-57Z" fill="#fffaf3" stroke="#a97142" stroke-width="8"/><path d="m258 240 204 0-21 162c-3 26-25 40-81 40s-78-14-81-40Z" fill="url(#drink)"/><ellipse cx="360" cy="240" rx="102" ry="22" fill="#e0b084"/>
+  <path d="M410 184 471 72" stroke="#3d2b1f" stroke-width="12" stroke-linecap="round"/><path d="M300 214c-30 20-31 45-4 65" fill="none" stroke="#fff4df" stroke-width="12" stroke-linecap="round" opacity=".85"/><circle cx="400" cy="215" r="13" fill="#fff6e8"/><circle cx="345" cy="216" r="11" fill="#fff6e8"/>
+  <path d="M521 231c20-22 20-42 0-62M548 248c24-25 23-50 0-73" fill="none" stroke="#c68642" stroke-width="6" stroke-linecap="round" opacity=".65"/><path d="M207 239c-19-22-19-41 0-59M179 252c-23-25-23-50 0-73" fill="none" stroke="#c68642" stroke-width="6" stroke-linecap="round" opacity=".65"/>
+</svg>

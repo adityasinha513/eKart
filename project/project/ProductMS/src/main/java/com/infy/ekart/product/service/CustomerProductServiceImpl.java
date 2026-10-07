@@ -27,6 +27,8 @@ import com.infy.ekart.product.repository.ProductRepository;
 public class CustomerProductServiceImpl implements CustomerProductService {
 
 	private static final int NEW_ARRIVAL_WINDOW_DAYS = 14;
+	private static final java.util.Set<String> V1_CUSTOMER_CATEGORIES = java.util.Set.of(
+			"mithai", "bengali sweets", "sweet", "sweets", "namkeen", "beverages", "beverage", "drinks");
 
 	@Autowired
 	private ProductRepository productRepository;
@@ -47,7 +49,8 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 				.collect(Collectors.toList());
 
 		List<ProductDTO> productDTOs = productRepository.findAll().stream()
-				.filter(Product::isAvailable)
+				.filter(p -> !p.isArchived())
+				.filter(this::isV1CustomerProduct)
 				.filter(p -> categoryId == null || (p.getCategory() != null && categoryId.equals(p.getCategory().getCategoryId())))
 				.filter(p -> search == null || search.isBlank()
 						|| p.getName().toLowerCase().contains(search.toLowerCase())
@@ -98,6 +101,9 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 	@Override
 	public ProductDTO getProductById(Integer productId) throws EKartProductException {
 		Product product = findProductOrThrow(productId);
+		if (product.isArchived() || !isV1CustomerProduct(product)) {
+			throw new EKartProductException("ProductService.PRODUCT_NOT_AVAILABLE", HttpStatus.NOT_FOUND);
+		}
 		List<Offer> activeOffers = offerRepository.findByActiveTrue().stream()
 				.filter(Offer::isCurrentlyRunning)
 				.collect(Collectors.toList());
@@ -105,13 +111,37 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 	}
 
 	@Override
+	public ProductDTO getProductForOrderHistory(Integer productId) throws EKartProductException {
+		return mapToProductDTO(findProductOrThrow(productId), List.of());
+	}
+
+	@Override
+	public List<ProductDTO> getAllProductsForAdmin() {
+		List<Offer> activeOffers = offerRepository.findByActiveTrue().stream()
+				.filter(Offer::isCurrentlyRunning).collect(Collectors.toList());
+		return productRepository.findAll().stream().map(product -> mapToProductDTO(product, activeOffers))
+				.collect(Collectors.toList());
+	}
+
+	@Override
 	public void reduceAvailableQuantity(Integer productId, Integer quantity) throws EKartProductException {
-		Product product = findProductOrThrow(productId);
-		if (quantity > product.getAvailableQuantity()) {
+		Product product = productRepository.findByIdForUpdate(productId)
+				.orElseThrow(() -> new EKartProductException("ProductService.PRODUCT_NOT_AVAILABLE", HttpStatus.NOT_FOUND));
+		if (!product.isAvailable() || quantity > product.getAvailableQuantity()) {
 			throw new EKartProductException("ProductService.INSUFFICIENT_STOCK", HttpStatus.CONFLICT);
 		}
 		product.setAvailableQuantity(product.getAvailableQuantity() - quantity);
 		productRepository.save(product);
+	}
+
+	@Override
+	public ProductDTO setStockQuantity(Integer productId, Integer quantity) throws EKartProductException {
+		if (quantity == null || quantity < 0) throw new EKartProductException("ProductService.INVALID_QUANTITY", HttpStatus.BAD_REQUEST);
+		Product product = productRepository.findByIdForUpdate(productId)
+				.orElseThrow(() -> new EKartProductException("ProductService.PRODUCT_NOT_AVAILABLE", HttpStatus.NOT_FOUND));
+		product.setAvailableQuantity(quantity);
+		productRepository.save(product);
+		return mapToProductDTO(product, List.of());
 	}
 
 	@Override
@@ -134,13 +164,15 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 	@Override
 	public void deleteProduct(Integer productId) throws EKartProductException {
 		Product product = findProductOrThrow(productId);
-		productRepository.delete(product);
+		product.setArchived(true);
+		product.setAvailable(false);
+		productRepository.save(product);
 	}
 
 	@Override
 	public ProductDTO setAvailability(Integer productId, boolean available) throws EKartProductException {
 		Product product = findProductOrThrow(productId);
-		product.setAvailable(available);
+		product.setAvailable(available && !product.isArchived() && product.getAvailableQuantity() != null && product.getAvailableQuantity() > 0);
 		productRepository.save(product);
 		return mapToProductDTO(product, List.of());
 	}
@@ -179,7 +211,8 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 		product.setAllergens(productDTO.getAllergens());
 		product.setShelfLifeDays(productDTO.getShelfLifeDays());
 		product.setImageUrl(productDTO.getImageUrl());
-		product.setAvailable(productDTO.isAvailable());
+		product.setAvailable(productDTO.isAvailable() && productDTO.getAvailableQuantity() != null
+				&& productDTO.getAvailableQuantity() > 0);
 		product.setBestSeller(productDTO.isBestSeller());
 	}
 
@@ -201,7 +234,8 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 		productDTO.setAllergens(product.getAllergens());
 		productDTO.setShelfLifeDays(product.getShelfLifeDays());
 		productDTO.setImageUrl(product.getImageUrl());
-		productDTO.setAvailable(product.isAvailable());
+		productDTO.setAvailable(product.isAvailable() && product.getAvailableQuantity() != null && product.getAvailableQuantity() > 0);
+		productDTO.setArchived(product.isArchived());
 		productDTO.setBestSeller(product.isBestSeller());
 		productDTO.setNewArrival(isNewArrival(product));
 		productDTO.setAvgRating(product.getAvgRating());
@@ -209,6 +243,11 @@ public class CustomerProductServiceImpl implements CustomerProductService {
 
 		applyBestOffer(productDTO, product, activeOffers);
 		return productDTO;
+	}
+
+	private boolean isV1CustomerProduct(Product product) {
+		return product.getCategory() != null
+				&& V1_CUSTOMER_CATEGORIES.contains(product.getCategory().getName().trim().toLowerCase(java.util.Locale.ROOT));
 	}
 
 	private void applyBestOffer(ProductDTO productDTO, Product product, List<Offer> activeOffers) {

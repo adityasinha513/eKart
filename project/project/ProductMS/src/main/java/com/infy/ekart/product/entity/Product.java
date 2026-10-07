@@ -64,6 +64,9 @@ public class Product {
 	@Column(name = "IS_AVAILABLE")
 	private boolean available = true;
 
+	@Column(name = "IS_ARCHIVED", nullable = false)
+	private boolean archived = false;
+
 	@Column(name = "IS_BEST_SELLER")
 	private boolean bestSeller = false;
 
@@ -187,6 +190,9 @@ public class Product {
 	public void setAvailable(boolean available) {
 		this.available = available;
 	}
+
+	public boolean isArchived() { return archived; }
+	public void setArchived(boolean archived) { this.archived = archived; }
 
 	public boolean isBestSeller() {
 		return bestSeller;

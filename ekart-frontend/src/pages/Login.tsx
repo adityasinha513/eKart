@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import { useAuth } from "../context/AuthContext";
+import { readStoredSession } from "../services/api/client";
 
 interface LoginFormValues {
   email: string;
@@ -34,7 +35,8 @@ export default function Login() {
 
     if (result.success) {
       toast.success("Welcome back!");
-      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? "/";
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname
+        ?? (readStoredSession()?.role === "ADMIN" ? "/admin" : "/");
       navigate(from);
       return;
     }

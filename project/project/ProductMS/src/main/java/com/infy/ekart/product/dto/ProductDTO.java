@@ -1,12 +1,15 @@
 package com.infy.ekart.product.dto;
 
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 public class ProductDTO {
 
 	private Integer productId;
 
-	@NotNull(message = "{product.name.absent}")
+	@NotBlank(message = "{product.name.absent}")
 	private String name;
 
 	private String description;
@@ -16,25 +19,30 @@ public class ProductDTO {
 	private String category;
 
 	@NotNull(message = "{product.categoryid.absent}")
+	@Min(value = 1, message = "{product.categoryid.invalid}")
 	private Integer categoryId;
 
 	@NotNull(message = "{product.price.absent}")
+	@DecimalMin(value = "0.01", message = "{product.price.invalid}")
 	private Double price;
 
 	private Double discountedPrice;
 	private Double discountPercent;
 
 	@NotNull(message = "{product.availablequantity.absent}")
+	@Min(value = 0, message = "{product.quantity.invalid}")
 	private Integer availableQuantity;
 
 	private boolean veg = true;
 	private String unit;
+	@Min(value = 1, message = "{product.unitquantity.invalid}")
 	private Integer unitQuantity;
 	private String ingredients;
 	private String allergens;
 	private Integer shelfLifeDays;
 	private String imageUrl;
 	private boolean available = true;
+	private boolean archived = false;
 	private boolean bestSeller = false;
 	private boolean newArrival = false;
 	private Double avgRating;
@@ -175,6 +183,9 @@ public class ProductDTO {
 	public void setAvailable(boolean available) {
 		this.available = available;
 	}
+
+	public boolean isArchived() { return archived; }
+	public void setArchived(boolean archived) { this.archived = archived; }
 
 	public boolean isBestSeller() {
 		return bestSeller;

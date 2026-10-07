@@ -50,3 +50,14 @@ Thumbs.db
 # Maven / Eclipse metadata
 .metadata/
 .mvn/wrapper/maven-wrapper.jar
+
+# Mobile & Expo
+.expo/
+web-build/
+
+# Scratch & temporary
+scratch_*.jpg
+scratch_*.png
+*.tmp
+*.bak
+

@@ -22,6 +22,7 @@ interface CartContextType {
   updateQuantity: (productId: number, quantity: number) => Promise<void>;
   removeFromCart: (productId: number) => Promise<void>;
   clearCart: () => Promise<void>;
+  clearCartLocally: () => void;
   refresh: () => Promise<void>;
   cartCount: number;
   subtotal: number;
@@ -125,6 +126,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const clearCartLocally = () => setCartItems([]);
+
   const cartCount = useMemo(() => cartItems.reduce((total, item) => total + item.quantity, 0), [cartItems]);
   const subtotal = useMemo(
     () => cartItems.reduce((total, item) => total + effectivePrice(item.product) * item.quantity, 0),
@@ -141,6 +144,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQuantity,
       removeFromCart,
       clearCart,
+      clearCartLocally,
       refresh,
       cartCount,
       subtotal,

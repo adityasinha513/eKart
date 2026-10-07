@@ -1,6 +1,8 @@
 package com.infy.ekart.customer.dto;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.DecimalMax;
 
 public class AddressDTO {
 
@@ -23,7 +25,11 @@ public class AddressDTO {
 
 	private String landmark;
 	private boolean isDefault;
+	@DecimalMin(value = "-90.0")
+	@DecimalMax(value = "90.0")
 	private Double latitude;
+	@DecimalMin(value = "-180.0")
+	@DecimalMax(value = "180.0")
 	private Double longitude;
 
 	public Integer getAddressId() {

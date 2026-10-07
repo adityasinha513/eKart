@@ -18,6 +18,7 @@ import javax.persistence.Table;
 import com.infy.ekart.customer.dto.DeliveryType;
 import com.infy.ekart.customer.dto.OrderStatus;
 import com.infy.ekart.customer.dto.PaymentThrough;
+import com.infy.ekart.customer.dto.PaymentStatus;
 
 @Entity
 @Table(name = "EK_ORDER")
@@ -37,11 +38,17 @@ public class Order {
 
 	private Double totalPrice;
 
+	private Double deliveryFee = 0.0;
+
 	@Enumerated(EnumType.STRING)
 	private OrderStatus orderStatus;
 
 	@Enumerated(EnumType.STRING)
 	private PaymentThrough paymentThrough;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "PAYMENT_STATUS", length = 16)
+	private PaymentStatus paymentStatus;
 
 	@Enumerated(EnumType.STRING)
 	private DeliveryType deliveryType;
@@ -88,6 +95,9 @@ public class Order {
 		this.totalPrice = totalPrice;
 	}
 
+	public Double getDeliveryFee() { return deliveryFee; }
+	public void setDeliveryFee(Double deliveryFee) { this.deliveryFee = deliveryFee; }
+
 	public PaymentThrough getPaymentThrough() {
 		return paymentThrough;
 	}
@@ -95,6 +105,8 @@ public class Order {
 	public void setPaymentThrough(PaymentThrough paymentThrough) {
 		this.paymentThrough = paymentThrough;
 	}
+	public PaymentStatus getPaymentStatus() { return paymentStatus; }
+	public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
 
 	public String getCustomerEmailId() {
 		return customerEmailId;

@@ -9,10 +9,14 @@ public class ProductDTO {
 	private String description;
 	private String category;
 	private String brand;
+	private String imageUrl;
+	private String unit;
+	private Integer unitQuantity;
 	private Double price;
 	// Populated by ProductMS when an active offer applies; null otherwise.
 	private Double discountedPrice;
 	private Integer availableQuantity;
+	private boolean available;
 
 
 	public Integer getProductId() {
@@ -39,6 +43,12 @@ public class ProductDTO {
 	public void setCategory(String category) {
 		this.category = category;
 	}
+	public String getImageUrl() { return imageUrl; }
+	public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+	public String getUnit() { return unit; }
+	public void setUnit(String unit) { this.unit = unit; }
+	public Integer getUnitQuantity() { return unitQuantity; }
+	public void setUnitQuantity(Integer unitQuantity) { this.unitQuantity = unitQuantity; }
 	public String getBrand() {
 		return brand;
 	}
@@ -65,6 +75,8 @@ public class ProductDTO {
 	public void setAvailableQuantity(Integer availableQuantity) {
 		this.availableQuantity = availableQuantity;
 	}
+	public boolean isAvailable() { return available; }
+	public void setAvailable(boolean available) { this.available = available; }
 	
 	
 	

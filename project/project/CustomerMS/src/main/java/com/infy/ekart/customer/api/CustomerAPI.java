@@ -141,6 +141,10 @@ public class CustomerAPI {
 	@PostMapping(value = "/customercarts/add-product")
 	public ResponseEntity<String> addProductToCart(@Valid @RequestBody CustomerCartDTO customerCartDTO)
 			throws EKartCustomerException {
+		org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken
+				|| "anonymousUser".equals(authentication.getPrincipal()) || !(authentication.getPrincipal() instanceof String)) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		customerCartDTO.setCustomerEmailId(String.valueOf(authentication.getPrincipal()));
 
 		customerService.getCustomerByEmailId(customerCartDTO.getCustomerEmailId());
 

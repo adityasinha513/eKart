@@ -33,12 +33,23 @@ CREATE TABLE EK_PRODUCT(
 	shelf_life_days INT,
 	image_url VARCHAR(1000),
 	is_available BIT(1),
+	is_archived BIT(1) NOT NULL DEFAULT 0,
 	is_best_seller BIT(1),
 	avg_rating DOUBLE,
 	rating_count INT,
 	created_at DATETIME(6),
 	constraint EK_PRODUCT_ID_PK primary key ( PRODUCT_ID ),
 	constraint EK_PRODUCT_CATEGORY_FK foreign key (CATEGORY_ID) references EK_CATEGORY(CATEGORY_ID)
+);
+
+CREATE TABLE EK_INVENTORY_RESERVATION (
+	reservation_id INT auto_increment,
+	order_id INT NOT NULL,
+	product_id INT NOT NULL,
+	quantity INT NOT NULL,
+	state VARCHAR(16) NOT NULL,
+	constraint EK_INVENTORY_RESERVATION_ID_PK primary key (reservation_id),
+	constraint EK_INVENTORY_RESERVATION_ORDER_PRODUCT_UQ unique (order_id, product_id)
 );
 
 CREATE TABLE EK_OFFER (
@@ -116,8 +127,10 @@ CREATE TABLE EK_ORDER (
 	ORDER_ID BIGINT NOT NULL auto_increment,
 	DATE_OF_ORDER DATETIME NOT NULL,
 	TOTAL_PRICE DECIMAL(12,2) NOT NULL,
+	DELIVERY_FEE DECIMAL(10,2) NOT NULL DEFAULT 0,
 	ORDER_STATUS VARCHAR(20) NOT NULL,
 	PAYMENT_THROUGH VARCHAR(20) NOT NULL,
+	PAYMENT_STATUS VARCHAR(16),
 	DATE_OF_DELIVERY DATETIME,
 	CUSTOMER_EMAIL_ID VARCHAR(50),
 	DISCOUNT DECIMAL(10,2),
@@ -134,6 +147,12 @@ CREATE TABLE EK_ORDERED_PRODUCT (
 	PRODUCT_ID INT,
 	QUANTITY INT,
 	unit_price DOUBLE,
+	product_name_snapshot VARCHAR(255),
+	description_snapshot VARCHAR(2000),
+	image_url_snapshot VARCHAR(1000),
+	category_snapshot VARCHAR(255),
+	unit_snapshot VARCHAR(255),
+	unit_quantity_snapshot INT,
 	constraint EK_ORDERED_PRODUCT_ID_PK primary key ( ORDERED_PRODUCT_ID),
 	constraint EK_ORDERED_PRODUCT_ID_ORDER_FK foreign key (ORDER_ID)
     references EK_ORDER(ORDER_ID)

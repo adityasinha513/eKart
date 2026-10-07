@@ -1,4 +1,5 @@
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
@@ -7,98 +8,74 @@ import { useAuth } from "../../context/AuthContext";
 import type { Product } from "../../types/Product";
 import { effectivePrice } from "../../types/Product";
 import { formatCurrency } from "../../utils/helpers";
-import VegBadge from "../../components/ui/VegBadge";
+import { shopCategoryForProduct } from "../../utils/catalogue";
+import ProductImage from "./ProductImage";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&q=80&auto=format&fit=crop";
-
-interface ProductCardProps {
-  product: Product;
-}
+interface ProductCardProps { product: Product }
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
+  const [adding, setAdding] = useState(false);
   const price = effectivePrice(product);
   const hasDiscount = product.discountedPrice != null && product.discountedPrice < product.price;
+  const available = product.available && product.availableQuantity > 0;
+  const unit = product.unit === "GRAM" ? "g" : product.unit === "KG" ? "kg" : product.unit === "BOX" ? "box" : "pc";
+  const category = shopCategoryForProduct(product);
 
   const handleAddToCart = async () => {
+    if (!available || adding) return;
+    setAdding(true);
     const ok = await addToCart(product, 1);
     if (ok) toast.success(`${product.name} added to your cart.`);
+    setAdding(false);
   };
 
   return (
-    <article className="group overflow-hidden rounded-[28px] border border-mithai-200 bg-white shadow-[0_10px_40px_rgba(120,66,31,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(120,66,31,0.16)]">
-      <div className="relative">
-        <Link to={`/product/${product.productId}`}>
-          <img
-            src={product.imageUrl ?? FALLBACK_IMAGE}
-            alt={product.name}
-            className="h-56 w-full object-cover transition duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-3xl border border-mithai-200 bg-white shadow-[0_8px_28px_rgba(61,43,31,0.07)] transition-shadow hover:shadow-[0_14px_34px_rgba(61,43,31,0.13)]">
+      <div className="relative overflow-hidden bg-mithai-100">
+        <Link to={`/product/${product.productId}`} aria-label={`View ${product.name}`} className="block aspect-[4/3] w-full">
+          <ProductImage product={product} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" />
         </Link>
-        {hasDiscount ? (
-          <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-maroon-700">
-            {Math.round(product.discountPercent ?? 0)}% off
-          </div>
-        ) : null}
-        {product.bestSeller ? (
-          <div className="absolute left-4 bottom-4 rounded-full bg-saffron-500/95 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-            Bestseller
-          </div>
-        ) : null}
+        {hasDiscount ? <span className="absolute left-3 top-3 rounded-full bg-cream-50 px-3 py-1 text-xs font-bold text-maroon-800 shadow-sm">{Math.round(product.discountPercent ?? 0)}% off</span> : null}
+        {product.bestSeller ? <span className="absolute bottom-3 left-3 rounded-full bg-darkbrown/90 px-3 py-1 text-xs font-semibold text-white">Shop favourite</span> : null}
         <button
+          type="button"
           onClick={() => toggleWishlist(product.productId)}
-          className={`absolute right-4 top-4 rounded-full border border-white bg-white/90 p-2 shadow-sm transition hover:text-red-500 ${
-            isAuthenticated && isWishlisted(product.productId) ? "text-red-500" : "text-stone-600"
-          }`}
-          aria-label="Toggle wishlist"
+          className={`absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white/95 shadow-sm transition-colors hover:text-maroon-700 ${isAuthenticated && isWishlisted(product.productId) ? "text-rose-600" : "text-stone-600"}`}
+          aria-label={isAuthenticated && isWishlisted(product.productId) ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
-          <Heart size={16} fill={isAuthenticated && isWishlisted(product.productId) ? "currentColor" : "none"} />
+          <Heart size={18} fill={isAuthenticated && isWishlisted(product.productId) ? "currentColor" : "none"} />
         </button>
       </div>
 
-      <div className="p-5">
-        <div className="flex items-center justify-between text-sm text-stone-500">
-          <span className="inline-flex items-center gap-2">
-            <VegBadge veg={product.veg} />
-            {product.category}
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="flex min-h-6 items-center justify-between gap-2 text-xs font-medium text-stone-500">
+          <span>{category ?? product.category}</span>
+          <span className={`rounded-full px-2.5 py-1 ${product.available ? "bg-emerald-50 text-emerald-800" : "bg-stone-100 text-stone-600"}`}>
+            {available ? "In stock" : "Unavailable"}
           </span>
-          <span>★ {product.avgRating ? product.avgRating.toFixed(1) : "New"}</span>
         </div>
 
-        <Link to={`/product/${product.productId}`}>
-          <h3 className="mt-3 line-clamp-2 min-h-[3.2rem] text-lg font-semibold text-maroon-900 transition hover:text-maroon-700">
-            {product.name}
-          </h3>
+        <Link to={`/product/${product.productId}`} className="mt-3 block text-darkbrown hover:text-maroon-700">
+          <h3 className="line-clamp-2 min-h-12 text-[1.05rem] font-semibold leading-6">{product.name}</h3>
         </Link>
 
-        <p className="mt-2 line-clamp-2 text-sm text-stone-500">{product.description}</p>
-
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-xl font-semibold text-maroon-800">{formatCurrency(price)}</span>
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-xl font-bold text-darkbrown">{formatCurrency(price)}</span>
           {hasDiscount ? <span className="text-sm text-stone-400 line-through">{formatCurrency(product.price)}</span> : null}
-          {product.unitQuantity ? (
-            <span className="text-sm text-stone-400">
-              / {product.unitQuantity}
-              {product.unit === "GRAM" ? "g" : product.unit === "KG" ? "kg" : product.unit === "BOX" ? " box" : " pc"}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="mt-5 flex items-center justify-between text-sm text-stone-500">
-          <span>{product.available ? "In stock" : "Out of stock"}</span>
-          {product.newArrival ? <span className="font-medium text-maroon-600">New arrival</span> : null}
+          <span className="text-sm text-stone-500">{product.unitQuantity ? `${product.unitQuantity} ${unit}` : unit}</span>
         </div>
 
         <button
-          onClick={handleAddToCart}
-          disabled={!product.available}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-maroon-700 py-3 font-semibold text-white transition hover:bg-maroon-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+          type="button"
+          onClick={() => void handleAddToCart()}
+          disabled={!available || adding}
+          className="mt-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-maroon-700 px-4 py-3 font-semibold text-white transition-colors hover:bg-maroon-800 disabled:bg-stone-300 disabled:text-stone-600"
         >
-          <ShoppingCart size={18} />
-          {product.available ? "Add to cart" : "Out of stock"}
+          <ShoppingBag size={17} />
+          {adding ? "Adding…" : available ? "Add to cart" : "Currently unavailable"}
         </button>
       </div>
     </article>

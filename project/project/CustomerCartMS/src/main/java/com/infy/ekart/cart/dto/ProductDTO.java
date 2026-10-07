@@ -13,6 +13,12 @@ public class ProductDTO {
 	// Populated by ProductMS when an active offer applies; null otherwise.
 	private Double discountedPrice;
 	private Integer availableQuantity;
+	// Product display fields copied from ProductMS so the customer cart can render a
+	// complete, current item and distinguish an unavailable item from an in-stock one.
+	private boolean available;
+	private String imageUrl;
+	private String unit;
+	private Integer unitQuantity;
 
 
 	public Integer getProductId() {
@@ -64,6 +70,30 @@ public class ProductDTO {
 	}
 	public void setAvailableQuantity(Integer availableQuantity) {
 		this.availableQuantity = availableQuantity;
+	}
+	public boolean isAvailable() {
+		return available;
+	}
+	public void setAvailable(boolean available) {
+		this.available = available;
+	}
+	public String getImageUrl() {
+		return imageUrl;
+	}
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
+	public String getUnit() {
+		return unit;
+	}
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+	public Integer getUnitQuantity() {
+		return unitQuantity;
+	}
+	public void setUnitQuantity(Integer unitQuantity) {
+		this.unitQuantity = unitQuantity;
 	}
 	
 	

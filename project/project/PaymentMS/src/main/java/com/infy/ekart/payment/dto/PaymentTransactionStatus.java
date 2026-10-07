@@ -1,5 +1,5 @@
 package com.infy.ekart.payment.dto;
 
 public enum PaymentTransactionStatus {
-	CREATED, AUTHORIZED, CAPTURED, FAILED, REFUNDED
+	CREATED, AUTHORIZED, CAPTURED, FAILED, CANCELLED, REFUNDED
 }

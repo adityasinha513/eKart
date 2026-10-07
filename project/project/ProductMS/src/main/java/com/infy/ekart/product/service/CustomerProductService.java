@@ -11,8 +11,13 @@ public interface CustomerProductService {
 			Boolean newArrivalsOnly, Double minPrice, Double maxPrice, String sortBy) throws EKartProductException;
 
 	ProductDTO getProductById(Integer productId) throws EKartProductException;
+	ProductDTO getProductForOrderHistory(Integer productId) throws EKartProductException;
+
+	List<ProductDTO> getAllProductsForAdmin();
 
 	void reduceAvailableQuantity(Integer productId, Integer quantity) throws EKartProductException;
+
+	ProductDTO setStockQuantity(Integer productId, Integer quantity) throws EKartProductException;
 
 	ProductDTO createProduct(ProductDTO productDTO) throws EKartProductException;
 

@@ -10,7 +10,8 @@ export type OrderStatus =
   | "CANCELLED";
 
 export type DeliveryType = "DELIVERY" | "PICKUP";
-export type PaymentThrough = "ONLINE" | "COD";
+export type PaymentThrough = "ONLINE" | "COD" | "DEBIT_CARD" | "CREDIT_CARD" | "UNKNOWN";
+export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "UNKNOWN";
 
 export interface OrderedProduct {
   orderedProductId: number;
@@ -29,13 +30,17 @@ export interface OrderStatusHistoryEntry {
 export interface Order {
   orderId: number;
   customerEmailId: string;
+  customerName?: string | null;
+  customerPhoneNumber?: string | null;
   dateOfOrder: string;
   totalPrice: number;
+  deliveryFee: number;
   orderStatus: OrderStatus;
   discount: number | null;
   paymentThrough: PaymentThrough;
+  paymentStatus: PaymentStatus;
   dateOfDelivery: string;
-  deliveryType: DeliveryType;
+  deliveryType: DeliveryType | "UNKNOWN";
   addressId: number | null;
   deliveryAddressSnapshot: string | null;
   pickupStoreLocation: string | null;

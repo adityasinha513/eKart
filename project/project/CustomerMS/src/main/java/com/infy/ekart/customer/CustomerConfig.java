@@ -18,8 +18,15 @@ public class CustomerConfig {
 		// Every outgoing inter-service call carries the shared secret too, since these calls
 		// bypass EkartGateway entirely (service-to-service traffic is direct, not proxied) and
 		// would otherwise be rejected by the receiving service's GatewaySecretFilter.
-		template.getInterceptors().add((request, body, execution) -> {
+			template.getInterceptors().add((request, body, execution) -> {
 			request.getHeaders().add("X-Gateway-Secret", gatewaySharedSecret);
+			request.getHeaders().set("X-Internal-Service", "CustomerMS");
+			org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+			if (authentication != null && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)
+					&& !"anonymousUser".equals(authentication.getPrincipal()) && authentication.getPrincipal() instanceof String) {
+				request.getHeaders().set("X-Auth-User", String.valueOf(authentication.getPrincipal()));
+				authentication.getAuthorities().stream().findFirst().ifPresent(role -> request.getHeaders().set("X-Auth-Role", role.getAuthority().replaceFirst("^ROLE_", "")));
+			}
 			return execution.execute(request, body);
 		});
 		return template;

@@ -26,9 +26,23 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public List<CategoryDTO> getAllCategories() {
-		return categoryRepository.findAllByOrderByDisplayOrderAsc().stream()
-				.map(this::mapToDTO)
+		java.util.Map<String, Category> groups = new java.util.LinkedHashMap<>();
+		for (Category category : categoryRepository.findAllByOrderByDisplayOrderAsc()) {
+			String displayName = customerCategoryName(category.getName());
+			if (displayName != null) groups.putIfAbsent(displayName, category);
+		}
+		return java.util.List.of("Sweet", "Namkeen", "Beverages").stream()
+				.filter(groups::containsKey)
+				.map(name -> { CategoryDTO dto = mapToDTO(groups.get(name)); dto.setName(name); return dto; })
 				.collect(Collectors.toList());
+	}
+
+	private String customerCategoryName(String name) {
+		String normalized = name == null ? "" : name.trim().toLowerCase(java.util.Locale.ROOT);
+		if (java.util.Set.of("mithai", "bengali sweets", "sweet", "sweets").contains(normalized)) return "Sweet";
+		if (normalized.equals("namkeen")) return "Namkeen";
+		if (java.util.Set.of("beverages", "beverage", "drinks").contains(normalized)) return "Beverages";
+		return null;
 	}
 
 	@Override

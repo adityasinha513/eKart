@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" role="img" aria-label="Illustration of assorted chocolates">
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#fff8ed"/><stop offset="1" stop-color="#f1d5b1"/></linearGradient><linearGradient id="choc" x2="0" y2="1"><stop stop-color="#80513d"/><stop offset="1" stop-color="#3d2b1f"/></linearGradient></defs>
+  <rect width="720" height="540" fill="url(#bg)"/><circle cx="360" cy="250" r="192" fill="#fffaf3" opacity=".72"/><rect x="170" y="189" width="380" height="236" rx="27" fill="#a97142"/><rect x="185" y="204" width="350" height="206" rx="18" fill="#f7e7ce"/>
+  <g fill="url(#choc)" stroke="#c68642" stroke-width="7"><rect x="211" y="229" width="89" height="68" rx="18"/><rect x="315" y="229" width="89" height="68" rx="18"/><rect x="419" y="229" width="89" height="68" rx="18"/><rect x="211" y="318" width="89" height="68" rx="18"/><rect x="315" y="318" width="89" height="68" rx="18"/><rect x="419" y="318" width="89" height="68" rx="18"/></g>
+  <g fill="none" stroke="#e0b084" stroke-width="6" stroke-linecap="round"><path d="M235 263c10-18 25-18 41 0"/><path d="M339 263c10-18 25-18 41 0"/><path d="M443 263c10-18 25-18 41 0"/><path d="M235 352c10-18 25-18 41 0"/><path d="M339 352c10-18 25-18 41 0"/><path d="M443 352c10-18 25-18 41 0"/></g>
+  <path d="M220 164c40-68 86-105 140-105s100 37 140 105" fill="none" stroke="#c68642" stroke-width="5" stroke-dasharray="3 17" stroke-linecap="round" opacity=".55"/>
+</svg>

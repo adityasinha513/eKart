@@ -29,6 +29,7 @@ import com.infy.ekart.customer.dto.OrderStatus;
 import com.infy.ekart.customer.dto.OrderStatusHistoryDTO;
 import com.infy.ekart.customer.dto.OrderedProductDTO;
 import com.infy.ekart.customer.dto.ProductDTO;
+import com.infy.ekart.customer.dto.PaymentStatus;
 import com.infy.ekart.customer.exception.EKartCustomerException;
 import com.infy.ekart.customer.service.OrderService;
 
@@ -49,32 +50,53 @@ public class OrderAPI {
 
 	@PostMapping(value = "/place-order")
 	public ResponseEntity<String> placeOrder(@Valid @RequestBody OrderDTO order) throws EKartCustomerException {
+		String authenticatedEmail = currentUser();
+		order.setCustomerEmailId(authenticatedEmail);
 
 		ResponseEntity<CartProductDTO[]> cartProductDTOsResponse = template.getForEntity(
 				"http://localhost:3335/Ekart/customercart-api/customer/" + order.getCustomerEmailId() + "/products",
 				CartProductDTO[].class);
 		CartProductDTO[] cartProductDTOs = cartProductDTOsResponse.getBody();
-
-		template.delete("http://localhost:3335/Ekart/customercart-api/customer/" + order.getCustomerEmailId() + "/products");
+		if (cartProductDTOs == null || cartProductDTOs.length == 0) {
+			return new ResponseEntity<>("Your cart is empty.", HttpStatus.BAD_REQUEST);
+		}
 
 		List<OrderedProductDTO> orderedProductDTOs = new ArrayList<>();
 		for (CartProductDTO cartProductDTO : cartProductDTOs) {
 			OrderedProductDTO orderedProductDTO = new OrderedProductDTO();
-			orderedProductDTO.setProduct(cartProductDTO.getProduct());
+			ProductDTO currentProduct = template.getForObject(
+					"http://localhost:3334/Ekart/product-api/product/" + cartProductDTO.getProduct().getProductId(),
+					ProductDTO.class);
+			if (currentProduct == null || !currentProduct.isAvailable()
+					|| currentProduct.getAvailableQuantity() == null
+					|| currentProduct.getAvailableQuantity() < cartProductDTO.getQuantity()) {
+				throw new EKartCustomerException("OrderService.INSUFFICIENT_STOCK");
+			}
+			orderedProductDTO.setProduct(currentProduct);
 			orderedProductDTO.setQuantity(cartProductDTO.getQuantity());
 			orderedProductDTOs.add(orderedProductDTO);
 		}
 		order.setOrderedProducts(orderedProductDTOs);
 
 		Integer orderId = orderService.placeOrder(order);
-
-		// Stock is reserved at placement time (not at payment confirmation) so two customers
-		// can't both "buy" the last item while one payment is still pending.
-		for (OrderedProductDTO orderedProductDTO : orderedProductDTOs) {
-			template.put(
-					"http://localhost:3334/Ekart/product-api/update/" + orderedProductDTO.getProduct().getProductId(),
-					orderedProductDTO.getQuantity());
+		java.util.Map<String, Object> reservation = new java.util.LinkedHashMap<>();
+		reservation.put("orderId", orderId);
+		List<java.util.Map<String, Object>> reservationItems = new ArrayList<>();
+		for (OrderedProductDTO item : orderedProductDTOs) {
+			java.util.Map<String, Object> reservationItem = new java.util.LinkedHashMap<>();
+			reservationItem.put("productId", item.getProduct().getProductId());
+			reservationItem.put("quantity", item.getQuantity());
+			reservationItems.add(reservationItem);
 		}
+		reservation.put("items", reservationItems);
+		try {
+			template.postForEntity("http://localhost:3334/Ekart/product-api/orders/" + orderId + "/reserve",
+					reservation, Void.class);
+		} catch (org.springframework.web.client.RestClientException reservationFailure) {
+			orderService.updatePaymentStatus(orderId, PaymentStatus.CANCELLED, "SYSTEM", "Inventory reservation failed");
+			throw new EKartCustomerException("OrderService.INSUFFICIENT_STOCK");
+		}
+		template.delete("http://localhost:3335/Ekart/customercart-api/customer/" + order.getCustomerEmailId() + "/products");
 
 		String modificationSuccessMsg = environment.getProperty("OrderAPI.ORDER_PLACED_SUCCESSFULLY");
 
@@ -85,6 +107,10 @@ public class OrderAPI {
 	public ResponseEntity<OrderDTO> getOrderDetails(
 			@NotNull(message = "{orderId.absent}") @PathVariable Integer orderId) throws EKartCustomerException {
 		OrderDTO orderDTO = orderService.getOrderDetails(orderId);
+		String authenticatedEmail = currentUserOrNull();
+		if (authenticatedEmail != null && !hasRole("ADMIN") && !authenticatedEmail.equalsIgnoreCase(orderDTO.getCustomerEmailId())) {
+			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		}
 		enrichWithProductDetails(orderDTO);
 		return new ResponseEntity<>(orderDTO, HttpStatus.OK);
 	}
@@ -93,6 +119,7 @@ public class OrderAPI {
 	public ResponseEntity<List<OrderDTO>> getOrdersOfCustomer(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId)
 			throws EKartCustomerException {
+		if (!currentUser().equalsIgnoreCase(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		List<OrderDTO> orderDTOs = orderService.findOrdersByCustomerEmailId(customerEmailId);
 		for (OrderDTO orderDTO : orderDTOs) {
 			enrichWithProductDetails(orderDTO);
@@ -103,30 +130,55 @@ public class OrderAPI {
 	@GetMapping(value = "order/{orderId}/status-history")
 	public ResponseEntity<List<OrderStatusHistoryDTO>> getOrderStatusHistory(
 			@NotNull(message = "{orderId.absent}") @PathVariable Integer orderId) throws EKartCustomerException {
+		OrderDTO order = orderService.getOrderDetails(orderId);
+		if (!hasRole("ADMIN") && !currentUser().equalsIgnoreCase(order.getCustomerEmailId())) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		return new ResponseEntity<>(orderService.getOrderStatusHistory(orderId), HttpStatus.OK);
 	}
 
+	@PutMapping(value = "order/{orderId}/cancel")
+	public ResponseEntity<Void> cancelOwnOrder(@PathVariable Integer orderId) throws EKartCustomerException {
+		OrderDTO order = orderService.getOrderDetails(orderId);
+		if (!currentUser().equalsIgnoreCase(order.getCustomerEmailId())) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		if (OrderStatus.CANCELLED.name().equals(order.getOrderStatus())) {
+			template.put("http://localhost:3334/Ekart/product-api/orders/" + orderId + "/release", null);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+		if (!OrderStatus.PLACED.name().equals(order.getOrderStatus()) || PaymentStatus.PAID.name().equals(order.getPaymentStatus())) {
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
+		}
+		orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED, currentUser(), "Cancelled by customer");
+		if (PaymentStatus.PENDING.name().equals(order.getPaymentStatus())) {
+			orderService.updatePaymentStatus(orderId, PaymentStatus.CANCELLED, currentUser(), "Cancelled by customer");
+		}
+		template.put("http://localhost:3334/Ekart/product-api/orders/" + orderId + "/release", null);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
 	@PutMapping(value = "order/{orderId}/update/order-status")
-	public void updateOrderAfterPayment(@NotNull(message = "{orderId.absent}") @PathVariable Integer orderId,
+	public ResponseEntity<Void> updateOrderAfterPayment(@NotNull(message = "{orderId.absent}") @PathVariable Integer orderId,
 			@RequestBody String transactionStatus) throws EKartCustomerException {
+		if (currentUserOrNull() != null) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		// @RequestBody String reads the raw request body as-is (Spring's StringHttpMessageConverter
 		// wins over Jackson for a String target type), so a JSON string literal like
 		// "TRANSACTION_SUCCESS" arrives here still wrapped in quotes — strip them before comparing.
 		transactionStatus = transactionStatus.replace("\"", "").trim();
-		// Stock was already reserved at order-placement time (see placeOrder), so this callback
-		// only needs to move the order's status — a failed online payment does not currently
-		// release the reserved stock back to inventory (a reconciliation job would handle that).
 		if (transactionStatus.equals("TRANSACTION_SUCCESS")) {
-			orderService.updateOrderStatus(orderId, OrderStatus.CONFIRMED, "SYSTEM", "Payment confirmed");
+			orderService.updatePaymentStatus(orderId, PaymentStatus.PAID, "SYSTEM", "Payment confirmed");
+		} else if (transactionStatus.equals("TRANSACTION_CANCELLED")) {
+			orderService.updatePaymentStatus(orderId, PaymentStatus.CANCELLED, "SYSTEM", "Payment cancelled");
+			template.put("http://localhost:3334/Ekart/product-api/orders/" + orderId + "/release", null);
 		} else {
-			orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED, "SYSTEM", "Payment failed");
+			orderService.updatePaymentStatus(orderId, PaymentStatus.FAILED, "SYSTEM", "Payment failed");
+			template.put("http://localhost:3334/Ekart/product-api/orders/" + orderId + "/release", null);
 		}
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
 	@PostMapping(value = "order/{orderId}/reorder")
 	public ResponseEntity<String> reorder(@NotNull(message = "{orderId.absent}") @PathVariable Integer orderId)
 			throws EKartCustomerException {
 		OrderDTO orderDTO = orderService.getOrderDetails(orderId);
+		if (!currentUser().equalsIgnoreCase(orderDTO.getCustomerEmailId())) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
 		CustomerCartDTO customerCartDTO = new CustomerCartDTO();
 		customerCartDTO.setCustomerEmailId(orderDTO.getCustomerEmailId());
@@ -147,12 +199,38 @@ public class OrderAPI {
 		return new ResponseEntity<>(environment.getProperty("OrderAPI.REORDER_SUCCESS"), HttpStatus.OK);
 	}
 
+	private String currentUser() {
+		String user = currentUserOrNull();
+		if (user == null) throw new org.springframework.security.access.AccessDeniedException("Authenticated customer is required.");
+		return user;
+	}
+
+	private String currentUserOrNull() {
+		org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken
+				|| "anonymousUser".equals(authentication.getPrincipal())) return null;
+		return !(authentication.getPrincipal() instanceof String) ? null : (String) authentication.getPrincipal();
+	}
+
+	private boolean hasRole(String role) {
+		org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+		return authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+	}
+
 	private void enrichWithProductDetails(OrderDTO orderDTO) {
 		for (OrderedProductDTO orderedProductDTO : orderDTO.getOrderedProducts()) {
-			ResponseEntity<ProductDTO> productResponse = template.getForEntity(
-					"http://localhost:3334/Ekart/product-api/product/" + orderedProductDTO.getProduct().getProductId(),
-					ProductDTO.class);
-			orderedProductDTO.setProduct(productResponse.getBody());
+			Integer productId = orderedProductDTO.getProduct().getProductId();
+			if (orderedProductDTO.getProduct().getName() != null) continue;
+			try {
+				ProductDTO product = template.getForObject("http://localhost:3334/Ekart/product-api/products/" + productId + "/historical",
+						ProductDTO.class);
+				if (product != null) orderedProductDTO.setProduct(product);
+			} catch (org.springframework.web.client.HttpClientErrorException.NotFound missingProduct) {
+				ProductDTO historicalProduct = new ProductDTO();
+				historicalProduct.setProductId(productId);
+				historicalProduct.setName("Catalogue item unavailable");
+				orderedProductDTO.setProduct(historicalProduct);
+			}
 		}
 	}
 

@@ -15,13 +15,17 @@ public class OrderDTO {
 	@NotNull(message = "{email.absent}")
 	@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}")
 	private String customerEmailId;
+	private String customerName;
+	private String customerPhoneNumber;
 	private LocalDateTime dateOfOrder;
 	private Double totalPrice;
+	private Double deliveryFee;
 	private String orderStatus;
 	private Double discount;
 	@NotNull(message = "{order.paymentthrough.absent}")
 	@Pattern(regexp = "(ONLINE|COD)", message = "{order.paymentthrough.invalid}")
 	private String paymentThrough;
+	private String paymentStatus;
 	@NotNull(message = "{order.dateofdelivery.absent}")
 	@Future(message = "{order.dateofdelivery.invalid}")
 
@@ -61,6 +65,10 @@ public class OrderDTO {
 	public void setCustomerEmailId(String customerEmailId) {
 		this.customerEmailId = customerEmailId;
 	}
+	public String getCustomerName() { return customerName; }
+	public void setCustomerName(String customerName) { this.customerName = customerName; }
+	public String getCustomerPhoneNumber() { return customerPhoneNumber; }
+	public void setCustomerPhoneNumber(String customerPhoneNumber) { this.customerPhoneNumber = customerPhoneNumber; }
 	
 	public Double getTotalPrice() {
 		return totalPrice;
@@ -68,6 +76,9 @@ public class OrderDTO {
 	public void setTotalPrice(Double totalPrice) {
 		this.totalPrice = totalPrice;
 	}
+
+	public Double getDeliveryFee() { return deliveryFee; }
+	public void setDeliveryFee(Double deliveryFee) { this.deliveryFee = deliveryFee; }
 	
 	
 	
@@ -98,6 +109,8 @@ public class OrderDTO {
 	public String getPaymentThrough() {
 		return paymentThrough;
 	}
+	public String getPaymentStatus() { return paymentStatus; }
+	public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 	public void setPaymentThrough(String paymentThrough) {
 		this.paymentThrough = paymentThrough;
 	}

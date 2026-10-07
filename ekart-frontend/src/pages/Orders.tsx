@@ -18,6 +18,11 @@ const STATUS_STYLES: Record<string, string> = {
   DELIVERED: "bg-green-50 text-green-700",
   CANCELLED: "bg-red-50 text-red-700",
 };
+const customerStatus = (order: Order) => order.orderStatus === "PLACED" ? "Order placed"
+  : order.orderStatus === "CONFIRMED" ? "Accepted" : order.orderStatus === "PREPARING" ? "Packing"
+  : order.orderStatus === "READY_FOR_PICKUP" ? order.deliveryType === "PICKUP" ? "Ready for pickup" : "Ready"
+  : order.orderStatus === "DELIVERED" && order.deliveryType === "PICKUP" ? "Picked up"
+  : order.orderStatus.replaceAll("_", " ");
 
 export default function Orders() {
   const { user } = useAuth();
@@ -27,11 +32,14 @@ export default function Orders() {
 
   useEffect(() => {
     if (!user) return;
-    ordersApi
-      .getOrdersForCustomer(user.emailId)
-      .then((data) => setOrders([...data].sort((a, b) => b.orderId - a.orderId)))
-      .catch(() => setError("Could not load your orders."))
-      .finally(() => setIsLoading(false));
+    let active = true;
+    const refresh = () => ordersApi.getOrdersForCustomer(user.emailId)
+      .then((data) => { if (active) { setOrders([...data].sort((a, b) => b.orderId - a.orderId)); setError(null); } })
+      .catch(() => { if (active) setError("Could not load your orders."); })
+      .finally(() => { if (active) setIsLoading(false); });
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 15000);
+    return () => { active = false; window.clearInterval(timer); };
   }, [user]);
 
   return (
@@ -70,10 +78,12 @@ export default function Orders() {
                 <p className="mt-1 text-sm text-stone-500">
                   {new Date(order.dateOfOrder).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })} • {order.orderedProducts?.length ?? 0} item(s)
                 </p>
+                <p className="mt-1 max-w-xl truncate text-sm text-stone-600">{order.orderedProducts?.map((item) => `${item.product?.name ?? "Product"} × ${item.quantity}`).join(" · ")}</p>
+                <p className="mt-1 text-xs text-stone-500">{order.deliveryType === "PICKUP" ? "Pickup" : order.deliveryType === "DELIVERY" ? "Delivery" : "Legacy order"} · {order.paymentThrough} · Payment {order.paymentStatus}</p>
               </div>
               <div className="flex items-center gap-4">
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[order.orderStatus] ?? "bg-stone-100 text-stone-700"}`}>
-                  {order.orderStatus.replaceAll("_", " ")}
+                  {customerStatus(order)}
                 </span>
                 <span className="font-semibold text-maroon-800">{formatCurrency(order.totalPrice)}</span>
               </div>

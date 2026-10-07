@@ -2,6 +2,7 @@ package com.infy.ekart.payment.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.UUID;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -30,6 +31,13 @@ public class RazorpayGatewayService {
 	@Value("${razorpay.key-secret}")
 	private String keySecret;
 
+	@Value("${payment.gateway.mode:SIMULATED}")
+	private String gatewayMode;
+
+	public boolean isSimulated() {
+		return "SIMULATED".equalsIgnoreCase(gatewayMode);
+	}
+
 	public String getKeyId() {
 		return keyId;
 	}
@@ -40,6 +48,7 @@ public class RazorpayGatewayService {
 	 * enters payment details on our domain.
 	 */
 	public String createOrder(Integer internalOrderId, double amountInRupees) throws EKartPaymentException {
+		if (isSimulated()) return "demo_order_" + internalOrderId + "_" + UUID.randomUUID().toString().replace("-", "");
 		try {
 			RazorpayClient client = new RazorpayClient(keyId, keySecret);
 
@@ -62,6 +71,7 @@ public class RazorpayGatewayService {
 	 * documented algorithm: HMAC-SHA256("{order_id}|{payment_id}", key_secret), hex-encoded.
 	 */
 	public boolean verifySignature(String gatewayOrderId, String gatewayPaymentId, String signature) {
+		if (isSimulated()) return gatewayOrderId.startsWith("demo_order_") && "SIMULATED_SUCCESS".equals(signature);
 		try {
 			String payload = gatewayOrderId + "|" + gatewayPaymentId;
 			Mac mac = Mac.getInstance("HmacSHA256");

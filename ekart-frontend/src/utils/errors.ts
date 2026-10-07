@@ -1,20 +1,12 @@
-/**
- * Backend error responses come back as either a raw string body (e.g. some CustomerCartMS/
- * OrderMS endpoints) or a structured {errorMessage, errorCode, timestamp} JSON body (the
- * EKartCustomerException / EKartProductException family). This normalizes either shape into
- * a displayable string.
- */
+/** Return customer-safe copy; service exception details belong in server logs, not the UI. */
 export function extractErrorMessage(error: unknown, fallback: string): string {
-  const axiosError = error as { response?: { data?: unknown } };
-  const data = axiosError?.response?.data;
-
-  if (typeof data === "string" && data.trim().length > 0) return data;
-
-  if (data && typeof data === "object") {
-    const record = data as Record<string, unknown>;
-    if (typeof record.errorMessage === "string") return record.errorMessage;
-    if (typeof record.message === "string") return record.message;
-  }
-
+  const axiosError = error as { response?: { status?: number }; code?: string };
+  const status = axiosError?.response?.status;
+  if (!status || axiosError?.code === "ERR_NETWORK") return "We couldn’t reach the shop. Check your connection and try again.";
+  if (status === 401) return "Please sign in again to continue.";
+  if (status === 403) return "This action is not available for your account.";
+  if (status === 404) return "This item could not be found.";
+  if (status === 429) return "Please wait a moment and try again.";
+  if (status >= 500) return "Something went wrong on our side. Please try again shortly.";
   return fallback;
 }

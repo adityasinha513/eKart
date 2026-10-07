@@ -7,8 +7,12 @@ import type { Order, OrderStatus } from "../types/Order";
 import { formatCurrency } from "../utils/helpers";
 import PrimaryButton from "../components/ui/PrimaryButton";
 
-const STATUS_FLOW: OrderStatus[] = ["PLACED", "CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED"];
+const STATUS_FLOW: OrderStatus[] = ["PLACED", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY", "DELIVERED"];
 const PICKUP_STATUS_FLOW: OrderStatus[] = ["PLACED", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "DELIVERED"];
+const friendlyStatus = (status: OrderStatus, order: Order) => status === "PLACED" ? "Order placed"
+  : status === "CONFIRMED" ? "Accepted" : status === "PREPARING" ? "Packing"
+  : status === "READY_FOR_PICKUP" ? order.deliveryType === "PICKUP" ? "Ready for pickup" : "Ready"
+  : status === "DELIVERED" && order.deliveryType === "PICKUP" ? "Picked up" : status.replaceAll("_", " ");
 
 export default function OrderDetail() {
   const { id } = useParams();
@@ -16,14 +20,18 @@ export default function OrderDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    ordersApi
-      .getOrder(Number(id))
-      .then(setOrder)
-      .catch(() => setError("Could not find this order."))
-      .finally(() => setIsLoading(false));
+    let active = true;
+    const refresh = () => ordersApi.getOrder(Number(id))
+      .then((data) => { if (active) { setOrder(data); setError(null); } })
+      .catch(() => { if (active) setError("Could not find this order."); })
+      .finally(() => { if (active) setIsLoading(false); });
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 15000);
+    return () => { active = false; window.clearInterval(timer); };
   }, [id]);
 
   const handleReorder = async () => {
@@ -36,6 +44,20 @@ export default function OrderDetail() {
       toast.error("Could not reorder right now.");
     } finally {
       setIsReordering(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!order || !window.confirm("Cancel this order? Reserved stock will be released.")) return;
+    setIsCancelling(true);
+    try {
+      await ordersApi.cancelOwnOrder(order.orderId);
+      setOrder(await ordersApi.getOrder(order.orderId));
+      toast.success("Your order was cancelled.");
+    } catch {
+      toast.error("This order can no longer be cancelled.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -65,13 +87,13 @@ export default function OrderDetail() {
               {new Date(order.dateOfOrder).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
             </h1>
           </div>
-          <PrimaryButton onClick={handleReorder} disabled={isReordering} icon={<RotateCcw size={16} />}>
+          <div className="flex flex-wrap gap-2"><PrimaryButton onClick={handleReorder} disabled={isReordering} icon={<RotateCcw size={16} />}>
             {isReordering ? "Adding..." : "Reorder"}
-          </PrimaryButton>
+          </PrimaryButton>{order.orderStatus === "PLACED" && order.paymentStatus !== "PAID" ? <button type="button" onClick={() => void handleCancel()} disabled={isCancelling} className="min-h-11 rounded-xl border border-rose-200 px-4 text-sm font-semibold text-rose-700 disabled:opacity-50">{isCancelling ? "Cancelling…" : "Cancel order"}</button> : null}</div>
         </div>
 
         {isCancelled ? (
-          <div className="mt-6 rounded-2xl bg-red-50 p-4 text-center text-sm font-semibold text-red-700">This order was cancelled.</div>
+          <div className="mt-6 rounded-2xl bg-red-50 p-4 text-center text-sm text-red-700"><p className="font-semibold">This order was cancelled.</p>{order.statusHistory?.slice().reverse().find((entry) => entry.status === "CANCELLED")?.note ? <p className="mt-1">{order.statusHistory.slice().reverse().find((entry) => entry.status === "CANCELLED")?.note}</p> : null}</div>
         ) : (
           <div className="mt-8">
             <div className="flex items-center justify-between">
@@ -86,7 +108,7 @@ export default function OrderDetail() {
                       </div>
                       <div className={`h-1 flex-1 ${index === flow.length - 1 ? "invisible" : reached ? "bg-maroon-700" : "bg-mithai-200"}`} />
                     </div>
-                    <p className={`mt-2 text-xs font-medium ${reached ? "text-maroon-800" : "text-stone-400"}`}>{status.replaceAll("_", " ")}</p>
+                    <p className={`mt-2 text-xs font-medium ${reached ? "text-maroon-800" : "text-stone-400"}`}>{friendlyStatus(status, order)}</p>
                   </div>
                 );
               })}
@@ -107,7 +129,8 @@ export default function OrderDetail() {
               <Package size={16} /> Delivery / pickup time
             </div>
             <p className="mt-2">{new Date(order.dateOfDelivery).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
-            <p className="mt-1">Payment: {order.paymentThrough === "COD" ? "Cash on Delivery" : "Online"}</p>
+            <p className="mt-1">Payment: {order.paymentThrough === "COD" ? "Cash on Delivery" : order.paymentThrough}</p>
+            <p className="mt-1">Payment status: {order.paymentStatus}</p>
           </div>
         </div>
 
@@ -135,7 +158,7 @@ export default function OrderDetail() {
             <div className="mt-4 space-y-3">
               {order.statusHistory.map((entry, index) => (
                 <div key={index} className="flex items-center justify-between rounded-2xl bg-cream-100 px-4 py-3 text-sm">
-                  <span className="font-medium text-maroon-900">{entry.status.replaceAll("_", " ")}</span>
+                  <span className="font-medium text-maroon-900">{friendlyStatus(entry.status, order)}</span>
                   <span className="text-stone-500">{new Date(entry.changedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
                 </div>
               ))}

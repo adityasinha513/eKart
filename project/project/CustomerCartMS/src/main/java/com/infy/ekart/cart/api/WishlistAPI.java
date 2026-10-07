@@ -48,6 +48,7 @@ public class WishlistAPI {
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.customeremail.format}") @PathVariable String customerEmailId,
 			@NotNull(message = "{cartproduct.productid.absent}") @PathVariable Integer productId)
 			throws EKartCustomerCartException {
+		if (!isCurrentCustomer(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		logger.info("Received a request to add product " + productId + " to the wishlist of " + customerEmailId);
 		wishlistService.addProductToWishlist(customerEmailId, productId);
 		return new ResponseEntity<>(environment.getProperty("WishlistAPI.PRODUCT_ADDED_TO_WISHLIST"), HttpStatus.CREATED);
@@ -57,6 +58,7 @@ public class WishlistAPI {
 	public ResponseEntity<Set<WishlistItemDTO>> getWishlistItems(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.customeremail.format}") @PathVariable String customerEmailId)
 			throws EKartCustomerCartException {
+		if (!isCurrentCustomer(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		Set<WishlistItemDTO> wishlistItemDTOs = wishlistService.getWishlistItems(customerEmailId);
 		for (WishlistItemDTO wishlistItemDTO : wishlistItemDTOs) {
 			ProductDTO productDTO = template.getForEntity(
@@ -72,8 +74,15 @@ public class WishlistAPI {
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.customeremail.format}") @PathVariable String customerEmailId,
 			@NotNull(message = "{cartproduct.productid.absent}") @PathVariable Integer productId)
 			throws EKartCustomerCartException {
+		if (!isCurrentCustomer(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		wishlistService.removeProductFromWishlist(customerEmailId, productId);
 		return new ResponseEntity<>(environment.getProperty("WishlistAPI.PRODUCT_REMOVED_FROM_WISHLIST"), HttpStatus.OK);
+	}
+
+	private boolean isCurrentCustomer(String email) {
+		org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+		return authentication != null && authentication.getPrincipal() instanceof String
+				&& email.equalsIgnoreCase(String.valueOf(authentication.getPrincipal()));
 	}
 
 }

@@ -1,12 +1,14 @@
 package com.infy.ekart.product.api;
 
 import javax.validation.Valid;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +37,11 @@ public class AdminProductAPI {
 	@Autowired
 	private Environment environment;
 
+	@GetMapping
+	public ResponseEntity<List<ProductDTO>> getAllProducts() {
+		return new ResponseEntity<>(customerProductService.getAllProductsForAdmin(), HttpStatus.OK);
+	}
+
 	@PostMapping
 	public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO productDTO)
 			throws EKartProductException {
@@ -57,6 +64,12 @@ public class AdminProductAPI {
 	public ResponseEntity<ProductDTO> setAvailability(@PathVariable Integer productId, @RequestBody boolean available)
 			throws EKartProductException {
 		return new ResponseEntity<>(customerProductService.setAvailability(productId, available), HttpStatus.OK);
+	}
+
+	@PutMapping(value = "/{productId}/stock")
+	public ResponseEntity<ProductDTO> setStock(@PathVariable Integer productId, @RequestBody Integer quantity)
+			throws EKartProductException {
+		return new ResponseEntity<>(customerProductService.setStockQuantity(productId, quantity), HttpStatus.OK);
 	}
 
 }

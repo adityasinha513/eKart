@@ -8,6 +8,8 @@ import javax.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,6 +38,7 @@ public class AddressAPI {
 	@GetMapping
 	public ResponseEntity<List<AddressDTO>> getAddresses(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId) {
+		if (!ownsPath(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		return new ResponseEntity<>(addressService.getAddressesForCustomer(customerEmailId), HttpStatus.OK);
 	}
 
@@ -43,6 +46,7 @@ public class AddressAPI {
 	public ResponseEntity<AddressDTO> addAddress(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId,
 			@Valid @RequestBody AddressDTO addressDTO) {
+		if (!ownsPath(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		return new ResponseEntity<>(addressService.addAddress(customerEmailId, addressDTO), HttpStatus.CREATED);
 	}
 
@@ -50,6 +54,7 @@ public class AddressAPI {
 	public ResponseEntity<AddressDTO> updateAddress(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId,
 			@PathVariable Integer addressId, @Valid @RequestBody AddressDTO addressDTO) throws EKartCustomerException {
+		if (!ownsPath(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		return new ResponseEntity<>(addressService.updateAddress(customerEmailId, addressId, addressDTO), HttpStatus.OK);
 	}
 
@@ -57,6 +62,7 @@ public class AddressAPI {
 	public ResponseEntity<Void> deleteAddress(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId,
 			@PathVariable Integer addressId) throws EKartCustomerException {
+		if (!ownsPath(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		addressService.deleteAddress(customerEmailId, addressId);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
@@ -65,7 +71,15 @@ public class AddressAPI {
 	public ResponseEntity<AddressDTO> setDefaultAddress(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId,
 			@PathVariable Integer addressId) throws EKartCustomerException {
+		if (!ownsPath(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		return new ResponseEntity<>(addressService.setDefaultAddress(customerEmailId, addressId), HttpStatus.OK);
+	}
+
+	private boolean ownsPath(String email) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return authentication != null && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)
+				&& !"anonymousUser".equals(authentication.getPrincipal()) && authentication.getPrincipal() instanceof String
+				&& email.equalsIgnoreCase((String) authentication.getPrincipal());
 	}
 
 }

@@ -13,6 +13,7 @@ public class OrderDTO {
 	private Double discount;
 	private String orderStatus;
 	private String paymentThrough;
+	private String paymentStatus;
 
 	public Integer getOrderId() {
 		return orderId;
@@ -54,6 +55,8 @@ public class OrderDTO {
 	public void setPaymentThrough(String paymentThrough) {
 		this.paymentThrough = paymentThrough;
 	}
+	public String getPaymentStatus() { return paymentStatus; }
+	public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 	public String getOrderStatus() {
 		return orderStatus;
 	}

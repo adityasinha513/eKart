@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
+import ProductImage from "../shared/components/ProductImage";
 import EmptyState from "../components/ui/EmptyState";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import VegBadge from "../components/ui/VegBadge";
@@ -10,7 +11,6 @@ import SectionHeading from "../shared/components/SectionHeading";
 import { formatCurrency } from "../utils/helpers";
 import { effectivePrice } from "../types/Product";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=300&q=80&auto=format&fit=crop";
 
 export default function Wishlist() {
   const { items, isLoading, toggleWishlist } = useWishlist();
@@ -42,7 +42,7 @@ export default function Wishlist() {
           {items.map((item) => (
             <div key={item.wishlistItemId} className="flex items-center gap-4 rounded-[24px] border border-mithai-200 bg-white p-4 shadow-sm">
               <Link to={`/product/${item.product.productId}`}>
-                <img src={item.product.imageUrl ?? FALLBACK_IMAGE} alt={item.product.name} className="h-20 w-20 rounded-2xl object-cover" />
+                <ProductImage product={item.product} className="h-20 w-20 shrink-0 rounded-2xl bg-mithai-100 object-cover" width={200} />
               </Link>
               <div className="flex-1">
                 <div className="flex items-center gap-2">

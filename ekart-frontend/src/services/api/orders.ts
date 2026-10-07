@@ -26,6 +26,10 @@ export async function reorder(orderId: number): Promise<string> {
   return data;
 }
 
+export async function cancelOwnOrder(orderId: number): Promise<void> {
+  await apiClient.put(`/orders/order/${orderId}/cancel`);
+}
+
 /** Extracts the numeric order id backend embeds at the end of its "...  123" success string. */
 export function parseOrderIdFromMessage(message: string): number | null {
   const match = message.match(/(\d+)\s*$/);

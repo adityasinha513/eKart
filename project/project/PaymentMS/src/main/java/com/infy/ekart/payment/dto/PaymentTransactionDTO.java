@@ -13,6 +13,7 @@ public class PaymentTransactionDTO {
 	// Only populated on the create-payment-order response — the public key the frontend
 	// needs to open Razorpay's Checkout widget. Never the key secret.
 	private String razorpayKeyId;
+	private boolean simulated;
 
 	public Integer getTransactionId() {
 		return transactionId;
@@ -77,5 +78,8 @@ public class PaymentTransactionDTO {
 	public void setRazorpayKeyId(String razorpayKeyId) {
 		this.razorpayKeyId = razorpayKeyId;
 	}
+
+	public boolean isSimulated() { return simulated; }
+	public void setSimulated(boolean simulated) { this.simulated = simulated; }
 
 }

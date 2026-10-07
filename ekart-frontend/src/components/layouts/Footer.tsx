@@ -1,55 +1,34 @@
 import { Link } from "react-router-dom";
-import { Globe, Mail, MapPin, MessageCircle, Phone, Share2 } from "lucide-react";
+import { MapPin, ShoppingBag } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-mithai-200 bg-maroon-900 text-cream-100">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-4 lg:px-8">
+    <footer className="mt-10 border-t border-[#C68642]/30 bg-[#3D2B1F] text-[#F7E7CE]">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-9 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:px-8 lg:py-12">
         <div>
-          <div className="flex items-center gap-2 text-2xl font-extrabold text-white">
-            <span aria-hidden>🍬</span> Mithai Junction
-          </div>
-          <p className="mt-4 text-sm leading-6 text-mithai-200">
-            Handcrafted Indian sweets, savouries, and gift boxes made fresh daily and delivered to your doorstep.
-          </p>
-          <div className="mt-5 flex gap-3">
-            <a href="#" className="rounded-full bg-white/10 p-2 transition hover:bg-white/20" aria-label="Facebook"><Share2 size={16} /></a>
-            <a href="#" className="rounded-full bg-white/10 p-2 transition hover:bg-white/20" aria-label="Instagram"><Globe size={16} /></a>
-            <a href="#" className="rounded-full bg-white/10 p-2 transition hover:bg-white/20" aria-label="Twitter"><MessageCircle size={16} /></a>
-          </div>
+          <Link to="/" className="inline-flex min-h-11 items-center gap-2 text-xl font-bold text-white"><span aria-hidden>✦</span> Mithai Junction</Link>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-[#F7E7CE]/75">Indian sweets, crunchy namkeen and traditional beverages, made to be shared.</p>
+          <p className="mt-4 inline-flex items-start gap-2 text-sm text-[#F7E7CE]/85"><MapPin size={16} className="mt-0.5 shrink-0 text-[#E0B084]" />Store pickup and delivery within 20 km</p>
         </div>
-
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-mithai-300">Shop</h3>
-          <ul className="mt-4 space-y-3 text-sm text-mithai-100">
-            <li><Link to="/catalog" className="hover:text-white">All products</Link></li>
-            <li><Link to="/catalog?bestSellerOnly=true" className="hover:text-white">Best sellers</Link></li>
-            <li><Link to="/catalog?newArrivalsOnly=true" className="hover:text-white">New arrivals</Link></li>
-            <li><Link to="/catalog?category=Combos%20%26%20Gift%20Boxes" className="hover:text-white">Gift boxes</Link></li>
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#E0B084]">Explore</h2>
+          <ul className="mt-3 space-y-1 text-sm">
+            <li><Link to="/catalog" className="inline-flex min-h-10 items-center hover:text-white">Full menu</Link></li>
+            <li><Link to="/catalog?category=Sweet" className="inline-flex min-h-10 items-center hover:text-white">Sweet</Link></li>
+            <li><Link to="/catalog?category=Namkeen" className="inline-flex min-h-10 items-center hover:text-white">Namkeen</Link></li>
+            <li><Link to="/catalog?category=Beverages" className="inline-flex min-h-10 items-center hover:text-white">Beverages</Link></li>
           </ul>
         </div>
-
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-mithai-300">Account</h3>
-          <ul className="mt-4 space-y-3 text-sm text-mithai-100">
-            <li><Link to="/orders" className="hover:text-white">Track my order</Link></li>
-            <li><Link to="/wishlist" className="hover:text-white">Wishlist</Link></li>
-            <li><Link to="/profile" className="hover:text-white">My account</Link></li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-mithai-300">Get in touch</h3>
-          <ul className="mt-4 space-y-3 text-sm text-mithai-100">
-            <li className="flex items-center gap-2"><MapPin size={15} /> Sector 18, Gurgaon, Haryana</li>
-            <li className="flex items-center gap-2"><Phone size={15} /> +91 98765 43210</li>
-            <li className="flex items-center gap-2"><Mail size={15} /> hello@mithaijunction.in</li>
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#E0B084]">Your account</h2>
+          <ul className="mt-3 space-y-1 text-sm">
+            <li><Link to="/login" className="inline-flex min-h-10 items-center gap-2 hover:text-white"><ShoppingBag size={15} />Sign in or create an account</Link></li>
+            <li><Link to="/orders" className="inline-flex min-h-10 items-center hover:text-white">Track an order</Link></li>
+            <li><Link to="/wishlist" className="inline-flex min-h-10 items-center hover:text-white">Wishlist</Link></li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-white/10 py-5 text-center text-xs text-mithai-300">
-        © 2026 Mithai Junction. All rights reserved.
-      </div>
+      <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-[#E0B084]">© {new Date().getFullYear()} Mithai Junction</div>
     </footer>
   );
 }

@@ -39,7 +39,7 @@ public class CustomerServiceImpl implements CustomerService {
 		customerDTO.setEmailId(customer.getEmailId());
 		customerDTO.setName(customer.getName());
 		customerDTO.setPhoneNumber(customer.getPhoneNumber());
-		customerDTO.setRole(customer.getRole().name());
+		customerDTO.setRole(customer.getRole() == null ? Role.CUSTOMER.name() : customer.getRole().name());
 		return customerDTO;
 
 	}
@@ -86,7 +86,7 @@ public class CustomerServiceImpl implements CustomerService {
 		customerDTO.setEmailId(customer.getEmailId());
 		customerDTO.setName(customer.getName());
 		customerDTO.setPhoneNumber(customer.getPhoneNumber());
-		customerDTO.setRole(customer.getRole().name());
+		customerDTO.setRole(customer.getRole() == null ? Role.CUSTOMER.name() : customer.getRole().name());
 		return customerDTO;
 
 	}

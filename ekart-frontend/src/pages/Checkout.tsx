@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, CreditCard, MapPin, Package, Plus, ShieldCheck, Store, Truck } from "lucide-react";
+import { AlertCircle, CheckCircle2, CreditCard, MapPin, Package, Plus, ShieldCheck, Store, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import PrimaryButton from "../components/ui/PrimaryButton";
@@ -37,9 +37,12 @@ const emptyAddressForm: AddressInput = {
 export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cartItems, subtotal, deliveryFee, grandTotal, clearCart } = useCart();
+  const { cartItems, subtotal, deliveryFee, clearCartLocally } = useCart();
+  const hasUnavailableItems = cartItems.some((item) => !item.product.available || item.product.availableQuantity <= 0);
 
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("DELIVERY");
+  const checkoutDeliveryFee = deliveryType === "DELIVERY" ? deliveryFee : 0;
+  const checkoutTotal = subtotal + checkoutDeliveryFee;
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [addressesLoading, setAddressesLoading] = useState(true);
@@ -68,19 +71,22 @@ export default function Checkout() {
   }, [user]);
 
   const canPlaceOrder = useMemo(() => {
-    if (deliveryType === "DELIVERY" && !selectedAddressId) return false;
-    if (!dateOfDelivery) return false;
+    if (deliveryType === "DELIVERY") {
+      const selectedAddress = addresses.find((address) => address.addressId === selectedAddressId);
+      if (!selectedAddress || selectedAddress.latitude == null || selectedAddress.longitude == null) return false;
+    }
+    if (!dateOfDelivery || hasUnavailableItems) return false;
     return true;
-  }, [deliveryType, selectedAddressId, dateOfDelivery]);
+  }, [deliveryType, selectedAddressId, dateOfDelivery, addresses, hasUnavailableItems]);
 
   if (cartItems.length === 0 && !placedOrderId) {
-    return <div className="mx-auto max-w-6xl px-4 py-20 text-center text-stone-600">Your cart is empty. Add products before checkout.</div>;
+    return <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6"><div className="rounded-3xl border border-mithai-200 bg-white p-7 text-center shadow-sm"><h1 className="font-serif text-2xl font-semibold text-darkbrown">Your bag is empty</h1><p className="mt-2 text-sm text-stone-600">Choose something from the menu before you check out.</p><SecondaryButton className="mt-5" onClick={() => navigate("/catalog?category=Sweet")}>Browse sweets</SecondaryButton></div></div>;
   }
 
   const handleSaveAddress = async () => {
     if (!user) return;
-    if (!addressForm.line1 || !addressForm.city || !addressForm.state || !addressForm.pincode) {
-      toast.error("Please fill in address line, city, state, and pincode.");
+    if (!addressForm.line1 || !addressForm.city || !addressForm.state || !addressForm.pincode || addressForm.latitude == null || addressForm.longitude == null) {
+      toast.error("Complete the address and pin your delivery location with GPS.");
       return;
     }
     setSavingAddress(true);
@@ -96,6 +102,18 @@ export default function Checkout() {
     } finally {
       setSavingAddress(false);
     }
+  };
+
+  const pinAddressWithGps = () => {
+    if (!navigator.geolocation) {
+      toast.error("Location is not available in this browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setAddressForm((form) => ({ ...form, latitude: coords.latitude, longitude: coords.longitude })),
+      () => toast.error("Allow location access or try again."),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handlePlaceOrder = async () => {
@@ -121,18 +139,30 @@ export default function Checkout() {
       if (paymentThrough === "ONLINE" && orderId) {
         try {
           const transaction = await paymentsApi.createPaymentOrder(user.emailId, orderId);
-          await paymentsApi.openRazorpayCheckout(transaction, user.name, user.emailId);
-          toast.success("Payment successful!");
+          const result = await paymentsApi.openRazorpayCheckout(transaction, user.name, user.emailId);
+          const paymentResult = await paymentsApi.verifyPayment(user.emailId, {
+            orderId,
+            gatewayOrderId: result.razorpay_order_id,
+            gatewayPaymentId: result.razorpay_payment_id,
+            gatewaySignature: result.razorpay_signature,
+          });
+          if (paymentResult.status === "CAPTURED") {
+            toast.success(transaction.simulated ? "Demo payment successful!" : "Payment successful!");
+          } else if (paymentResult.status === "CANCELLED") {
+            setPaymentNotice("Demo payment was cancelled. The order was cancelled and stock released.");
+          }
         } catch {
+          try { await paymentsApi.cancelPayment(user.emailId, orderId); } catch { /* create-payment may have failed before a transaction existed */ }
+          try { await ordersApi.cancelOwnOrder(orderId); } catch { /* payment callback may already have cancelled the order */ }
           setPaymentNotice(
-            "Online payments aren't fully connected yet, so this order is placed and awaiting payment confirmation. Please contact support or retry payment from your order details."
+            "Payment failed or was interrupted. The order was cancelled and stock release was requested."
           );
         }
       } else {
         toast.success("Order placed successfully!");
       }
 
-      await clearCart();
+      clearCartLocally();
       setPlacedOrderId(orderId);
     } catch (error) {
       toast.error(extractErrorMessage(error, "Could not place your order."));
@@ -144,12 +174,10 @@ export default function Checkout() {
   if (placedOrderId) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-[36px] border border-emerald-200 bg-emerald-50 p-8 text-center shadow-sm">
-          <CheckCircle2 size={48} className="mx-auto text-emerald-600" />
-          <h1 className="mt-5 text-3xl font-semibold text-maroon-900">Order confirmed!</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-stone-600">
-            Order <span className="font-semibold">#{placedOrderId}</span> has been placed successfully.
-          </p>
+        <div className={`rounded-3xl border p-6 text-center shadow-sm sm:p-9 ${paymentNotice ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
+          {paymentNotice ? <AlertCircle size={48} className="mx-auto text-amber-700" /> : <CheckCircle2 size={48} className="mx-auto text-emerald-700" />}
+          <h1 className="mt-5 font-serif text-3xl font-semibold text-darkbrown">{paymentNotice ? "Order received · payment not confirmed" : "Order placed"}</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-stone-600">Order <span className="font-semibold">#{placedOrderId}</span> {paymentNotice ? "was created, but we could not confirm payment." : "has been placed successfully."}</p>
           {paymentNotice ? (
             <p className="mx-auto mt-4 max-w-2xl rounded-2xl bg-amber-50 p-4 text-sm text-amber-800">{paymentNotice}</p>
           ) : null}
@@ -163,13 +191,13 @@ export default function Checkout() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-6xl px-4 py-6 pb-10 sm:px-6 sm:py-9 lg:px-8">
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-maroon-700">Secure checkout</p>
-        <h1 className="text-3xl font-semibold text-maroon-900">Complete your order</h1>
+        <h1 className="font-serif text-3xl font-semibold text-darkbrown">Complete your order</h1>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:gap-7">
         <div className="space-y-4">
           <div className="rounded-[28px] border border-mithai-200 bg-white p-6 shadow-sm">
             <div className="flex items-center gap-3">
@@ -215,7 +243,7 @@ export default function Checkout() {
               {addressesLoading ? (
                 <div className="mt-4 h-20 animate-pulse rounded-2xl bg-mithai-100" />
               ) : addresses.length === 0 && !showAddressForm ? (
-                <p className="mt-4 text-sm text-stone-500">No saved addresses yet. Add one to continue.</p>
+                <p className="mt-4 rounded-xl bg-mithai-50 p-3 text-sm text-stone-600">Add an address and pin its location. We verify the 20 km delivery area when the order is placed.</p>
               ) : (
                 <div className="mt-4 space-y-3">
                   {addresses.map((address) => (
@@ -245,14 +273,18 @@ export default function Checkout() {
               {showAddressForm ? (
                 <div className="mt-5 rounded-2xl border border-dashed border-mithai-300 p-4">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <input className="rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Label (Home, Work...)" value={addressForm.label ?? ""} onChange={(e) => setAddressForm((f) => ({ ...f, label: e.target.value }))} />
-                    <input className="rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Pincode" value={addressForm.pincode} onChange={(e) => setAddressForm((f) => ({ ...f, pincode: e.target.value }))} />
-                    <input className="sm:col-span-2 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Address line 1" value={addressForm.line1} onChange={(e) => setAddressForm((f) => ({ ...f, line1: e.target.value }))} />
-                    <input className="sm:col-span-2 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Address line 2 (optional)" value={addressForm.line2 ?? ""} onChange={(e) => setAddressForm((f) => ({ ...f, line2: e.target.value }))} />
-                    <input className="rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="City" value={addressForm.city} onChange={(e) => setAddressForm((f) => ({ ...f, city: e.target.value }))} />
-                    <input className="rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="State" value={addressForm.state} onChange={(e) => setAddressForm((f) => ({ ...f, state: e.target.value }))} />
-                    <input className="sm:col-span-2 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Landmark (optional)" value={addressForm.landmark ?? ""} onChange={(e) => setAddressForm((f) => ({ ...f, landmark: e.target.value }))} />
+                    <input autoComplete="address-line1" className="min-h-12 min-w-0 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Label (Home, Work...)" value={addressForm.label ?? ""} onChange={(e) => setAddressForm((f) => ({ ...f, label: e.target.value }))} />
+                    <input inputMode="numeric" autoComplete="postal-code" maxLength={6} className="min-h-12 min-w-0 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Pincode" value={addressForm.pincode} onChange={(e) => setAddressForm((f) => ({ ...f, pincode: e.target.value }))} />
+                    <input autoComplete="street-address" className="min-h-12 min-w-0 sm:col-span-2 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Address line 1" value={addressForm.line1} onChange={(e) => setAddressForm((f) => ({ ...f, line1: e.target.value }))} />
+                    <input autoComplete="address-line2" className="min-h-12 min-w-0 sm:col-span-2 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Address line 2 (optional)" value={addressForm.line2 ?? ""} onChange={(e) => setAddressForm((f) => ({ ...f, line2: e.target.value }))} />
+                    <input autoComplete="address-level2" className="min-h-12 min-w-0 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="City" value={addressForm.city} onChange={(e) => setAddressForm((f) => ({ ...f, city: e.target.value }))} />
+                    <input autoComplete="address-level1" className="min-h-12 min-w-0 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="State" value={addressForm.state} onChange={(e) => setAddressForm((f) => ({ ...f, state: e.target.value }))} />
+                    <input className="min-h-12 min-w-0 sm:col-span-2 rounded-xl border border-mithai-200 px-3 py-2 outline-none focus:border-maroon-400" placeholder="Landmark (optional)" value={addressForm.landmark ?? ""} onChange={(e) => setAddressForm((f) => ({ ...f, landmark: e.target.value }))} />
+                  <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+                    <button type="button" onClick={pinAddressWithGps} className="rounded-xl border border-maroon-300 px-4 py-2 text-sm font-semibold text-maroon-800">Use my location</button>
+                    <span className="text-xs text-stone-500">{addressForm.latitude != null && addressForm.longitude != null ? "Location pinned. Delivery is limited to 20 km from the store." : "A location pin is required to check the 20 km delivery area."}</span>
                   </div>
+                </div>
                   <div className="mt-3 flex gap-3">
                     <PrimaryButton onClick={handleSaveAddress} disabled={savingAddress}>{savingAddress ? "Saving..." : "Save address"}</PrimaryButton>
                     <SecondaryButton onClick={() => setShowAddressForm(false)}>Cancel</SecondaryButton>
@@ -261,12 +293,12 @@ export default function Checkout() {
               ) : null}
             </div>
           ) : (
-            <div className="rounded-[28px] border border-mithai-200 bg-white p-6 shadow-sm">
+            <div className="rounded-3xl border border-mithai-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex items-center gap-3">
                 <Store className="text-maroon-700" />
                 <h2 className="text-xl font-semibold text-maroon-900">Pickup store</h2>
               </div>
-              <p className="mt-3 text-sm text-stone-500">Mithai Junction Flagship Store, Sector 18, Gurgaon, Haryana</p>
+              <p className="mt-3 text-sm text-stone-500">Mithai Junction - MG Road, Bengaluru</p>
             </div>
           )}
 
@@ -303,14 +335,14 @@ export default function Checkout() {
                 onClick={() => setPaymentThrough("ONLINE")}
                 className={`rounded-2xl border p-4 text-left transition ${paymentThrough === "ONLINE" ? "border-maroon-600 bg-mithai-50" : "border-mithai-200 bg-white hover:bg-cream-50"}`}
               >
-                <p className="font-semibold text-maroon-900">Pay online</p>
-                <p className="mt-2 text-sm text-stone-500">UPI / Card via Razorpay (setup in progress)</p>
+                <p className="font-semibold text-maroon-900">Demo online payment</p>
+                <p className="mt-2 text-sm text-stone-500">Simulated for v1. No real money is charged.</p>
               </button>
             </div>
           </div>
         </div>
 
-        <aside className="h-fit rounded-[28px] border border-mithai-200 bg-white p-6 shadow-sm">
+        <aside className="h-fit rounded-3xl border border-mithai-200 bg-white p-5 shadow-sm lg:sticky lg:top-32 sm:p-6">
           <div className="flex items-center gap-3">
             <ShieldCheck className="text-maroon-700" />
             <h2 className="text-xl font-semibold text-maroon-900">Order summary</h2>
@@ -325,13 +357,13 @@ export default function Checkout() {
           </div>
           <div className="mt-5 space-y-3 border-t border-mithai-200 pt-4 text-sm text-stone-600">
             <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-            <div className="flex justify-between"><span>Delivery</span><span>{deliveryFee === 0 ? "Free" : formatCurrency(deliveryFee)}</span></div>
+            <div className="flex justify-between"><span>{deliveryType === "DELIVERY" ? "Delivery fee" : "Pickup"}</span><span>{checkoutDeliveryFee === 0 ? "Free" : formatCurrency(checkoutDeliveryFee)}</span></div>
           </div>
           <div className="mt-5 border-t border-mithai-200 pt-4 text-lg font-semibold text-maroon-900">
-            <div className="flex items-center justify-between"><span>Grand total</span><span className="text-maroon-700">{formatCurrency(grandTotal)}</span></div>
+            <div className="flex items-center justify-between"><span>Final total</span><span className="text-maroon-700">{formatCurrency(checkoutTotal)}</span></div>
           </div>
           <PrimaryButton fullWidth className="mt-6" onClick={handlePlaceOrder} disabled={!canPlaceOrder || isPlacing}>
-            {isPlacing ? "Placing order..." : `Place order — ${formatCurrency(grandTotal)}`}
+            {isPlacing ? "Placing order…" : `Place order · ${formatCurrency(checkoutTotal)}`}
           </PrimaryButton>
         </aside>
       </div>

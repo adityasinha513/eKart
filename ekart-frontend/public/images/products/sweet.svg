@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" role="img" aria-label="Illustration of Indian sweets">
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#fff8ed"/><stop offset="1" stop-color="#f1d5b1"/></linearGradient><linearGradient id="bowl" x2="0" y2="1"><stop stop-color="#9c5630"/><stop offset="1" stop-color="#5c3326"/></linearGradient></defs>
+  <rect width="720" height="540" fill="url(#bg)"/><circle cx="360" cy="255" r="192" fill="#fffaf3" opacity=".72"/>
+  <ellipse cx="360" cy="370" rx="210" ry="67" fill="#c68642"/><path d="M150 350h420c-10 89-82 136-210 136s-200-47-210-136Z" fill="url(#bowl)"/><ellipse cx="360" cy="350" rx="211" ry="69" fill="#e0b084"/><ellipse cx="360" cy="342" rx="178" ry="52" fill="#79452e"/>
+  <g fill="#d89145" stroke="#f5c57b" stroke-width="7"><circle cx="263" cy="308" r="38"/><circle cx="339" cy="296" r="39"/><circle cx="417" cy="307" r="37"/><circle cx="300" cy="353" r="37"/><circle cx="379" cy="352" r="39"/><circle cx="455" cy="352" r="34"/></g>
+  <g fill="#f1d08b"><path d="m247 302 9-7 8 7-8 7Z"/><path d="m330 286 9-7 8 7-8 7Z"/><path d="m410 302 9-7 8 7-8 7Z"/><path d="m291 348 9-7 8 7-8 7Z"/><path d="m374 345 9-7 8 7-8 7Z"/></g>
+  <path d="M217 221c43-78 101-121 143-121s100 43 143 121" fill="none" stroke="#c68642" stroke-width="5" stroke-dasharray="3 17" stroke-linecap="round" opacity=".55"/><circle cx="360" cy="100" r="9" fill="#a97142"/>
+</svg>

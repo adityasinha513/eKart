@@ -38,7 +38,7 @@ export default function AppRoutes() {
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/product/:id" element={<ProductDetails />} />
 
-            <Route element={<ProtectedRoute />}>
+            <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile" element={<Profile />} />
@@ -48,16 +48,18 @@ export default function AppRoutes() {
               <Route path="/notifications" element={<Notifications />} />
             </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="offers" element={<AdminOffers />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="customers" element={<AdminCustomers />} />
-                <Route path="reviews" element={<AdminReviews />} />
-              </Route>
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="inventory" element={<AdminProducts />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="offers" element={<AdminOffers />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="customers" element={<AdminCustomers />} />
+              <Route path="reviews" element={<AdminReviews />} />
             </Route>
           </Route>
 

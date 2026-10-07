@@ -1,87 +1,65 @@
 @import "tailwindcss";
 
 @theme {
-  --color-mithai-50: #fdf8f0;
-  --color-mithai-100: #faeed9;
-  --color-mithai-200: #f3dab0;
-  --color-mithai-300: #eabf7c;
-  --color-mithai-400: #e0a04c;
-  --color-mithai-500: #d4842e;
-  --color-mithai-600: #b96922;
-  --color-mithai-700: #94511e;
-  --color-mithai-800: #78421f;
-  --color-mithai-900: #63371d;
+  --color-mithai-50: #fffaf3;
+  --color-mithai-100: #f7e7ce;
+  --color-mithai-200: #edcfaa;
+  --color-mithai-300: #e0b084;
+  --color-mithai-400: #d49a62;
+  --color-mithai-500: #c68642;
+  --color-mithai-600: #a97142;
+  --color-mithai-700: #875a37;
+  --color-mithai-800: #604331;
+  --color-mithai-900: #3d2b1f;
+  --color-darkbrown: #3d2b1f;
 
-  --color-saffron-400: #f5a623;
-  --color-saffron-500: #ec8f0e;
+  --color-saffron-400: #e0b084;
+  --color-saffron-500: #c68642;
 
-  --color-maroon-600: #7a2035;
-  --color-maroon-700: #611829;
-  --color-maroon-800: #4a1220;
-  --color-maroon-900: #350c17;
+  --color-maroon-400: #d49a62;
+  --color-maroon-600: #a97142;
+  --color-maroon-700: #a97142;
+  --color-maroon-800: #604331;
+  --color-maroon-900: #3d2b1f;
 
-  --color-cream-50: #fffdf8;
-  --color-cream-100: #fdf6ea;
+  --color-cream-50: #fffaf3;
+  --color-cream-100: #f7e7ce;
 }
 
 :root {
-  font-family: "Poppins", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #3a2418;
-  background: #fffdf8;
+  color: #3d2b1f;
+  background: #fffaf3;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(180deg, #fffdf8 0%, #fdf6ea 100%);
-  color: #3a2418;
+  background: #fffaf3;
+  color: #3d2b1f;
 }
+#root { min-height: 100vh; }
+img { display: block; }
+button, input, select, textarea { font: inherit; }
+button:not(:disabled), a, input[type="checkbox"], input[type="radio"], select { touch-action: manipulation; }
+button:not(:disabled) { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid #c68642; outline-offset: 3px; }
+h1, h2, h3 { letter-spacing: -0.025em; }
+p { text-wrap: pretty; }
+::selection { background: #e0b084; color: #3d2b1f; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-#root {
-  min-height: 100vh;
-}
-
-img {
-  display: block;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-
-::selection {
-  background: #f3dab0;
-  color: #63371d;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

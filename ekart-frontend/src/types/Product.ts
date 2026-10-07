@@ -18,6 +18,7 @@ export interface Product {
   shelfLifeDays: number | null;
   imageUrl: string | null;
   available: boolean;
+  archived?: boolean;
   bestSeller: boolean;
   newArrival: boolean;
   avgRating: number | null;

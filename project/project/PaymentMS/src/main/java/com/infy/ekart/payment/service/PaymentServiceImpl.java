@@ -46,6 +46,13 @@ public class PaymentServiceImpl implements PaymentService {
 		if (!"ONLINE".equals(order.getPaymentThrough())) {
 			throw new EKartPaymentException("PaymentService.ORDER_NOT_ONLINE_PAYMENT");
 		}
+		if (!"PENDING".equals(order.getPaymentStatus())) {
+			throw new EKartPaymentException("PaymentService.TRANSACTION_ALREADY_DONE");
+		}
+		PaymentTransaction prior = paymentTransactionRepository.findFirstByOrderIdOrderByTransactionIdDesc(orderId).orElse(null);
+		if (prior != null && prior.getStatus() == PaymentTransactionStatus.CREATED) {
+			return mapToDTO(prior, razorpayGatewayService.isSimulated() ? null : razorpayGatewayService.getKeyId());
+		}
 
 		String gatewayOrderId = razorpayGatewayService.createOrder(orderId, order.getTotalPrice());
 
@@ -70,15 +77,22 @@ public class PaymentServiceImpl implements PaymentService {
 				|| !transaction.getCustomerEmailId().equalsIgnoreCase(customerEmailId)) {
 			throw new EKartPaymentException("PaymentService.ORDER_DOES_NOT_BELONGS");
 		}
+		if (transaction.getStatus() != PaymentTransactionStatus.CREATED) return mapToDTO(transaction, null);
 
-		boolean valid = razorpayGatewayService.verifySignature(request.getGatewayOrderId(),
-				request.getGatewayPaymentId(), request.getGatewaySignature());
+		boolean simulated = razorpayGatewayService.isSimulated();
+		boolean cancelled = simulated && "SIMULATED_CANCEL".equals(request.getGatewaySignature());
+		boolean valid = simulated ? "SIMULATED_SUCCESS".equals(request.getGatewaySignature())
+				: razorpayGatewayService.verifySignature(request.getGatewayOrderId(),
+						request.getGatewayPaymentId(), request.getGatewaySignature());
 
 		transaction.setGatewayPaymentId(request.getGatewayPaymentId());
 		transaction.setGatewaySignature(request.getGatewaySignature());
 		transaction.setUpdatedAt(LocalDateTime.now());
 
-		if (valid) {
+		if (cancelled) {
+			transaction.setStatus(PaymentTransactionStatus.CANCELLED);
+			paymentCircuitBreakerService.updateOrderAfterPayment(transaction.getOrderId(), "TRANSACTION_CANCELLED");
+		} else if (valid) {
 			transaction.setStatus(PaymentTransactionStatus.CAPTURED);
 			paymentCircuitBreakerService.updateOrderAfterPayment(transaction.getOrderId(), "TRANSACTION_SUCCESS");
 		} else {
@@ -88,11 +102,24 @@ public class PaymentServiceImpl implements PaymentService {
 
 		paymentTransactionRepository.save(transaction);
 
-		if (!valid) {
+		if (!valid && !cancelled) {
 			throw new EKartPaymentException("PaymentService.SIGNATURE_VERIFICATION_FAILED");
 		}
 
 		return mapToDTO(transaction, null);
+	}
+
+	@Override
+	public void cancelPayment(String customerEmailId, Integer orderId) throws EKartPaymentException {
+		PaymentTransaction transaction = paymentTransactionRepository.findFirstByOrderIdOrderByTransactionIdDesc(orderId)
+				.orElseThrow(() -> new EKartPaymentException("PaymentService.TRANSACTION_NOT_FOUND", HttpStatus.NOT_FOUND));
+		if (!transaction.getCustomerEmailId().equalsIgnoreCase(customerEmailId)) {
+			throw new EKartPaymentException("PaymentService.ORDER_DOES_NOT_BELONGS");
+		}
+		if (transaction.getStatus() != PaymentTransactionStatus.CREATED) return;
+		transaction.setStatus(PaymentTransactionStatus.CANCELLED);
+		transaction.setUpdatedAt(LocalDateTime.now());
+		paymentCircuitBreakerService.updateOrderAfterPayment(orderId, "TRANSACTION_CANCELLED");
 	}
 
 	private OrderDTO fetchOrder(Integer orderId) throws EKartPaymentException {
@@ -114,6 +141,7 @@ public class PaymentServiceImpl implements PaymentService {
 		dto.setCurrency(transaction.getCurrency());
 		dto.setStatus(transaction.getStatus().name());
 		dto.setRazorpayKeyId(razorpayKeyId);
+		dto.setSimulated(razorpayGatewayService.isSimulated());
 		return dto;
 	}
 

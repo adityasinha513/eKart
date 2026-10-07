@@ -2,6 +2,8 @@ package com.infy.ekart.product.api;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.infy.ekart.product.dto.ProductDTO;
+import com.infy.ekart.product.dto.InventoryReservationRequest;
 import com.infy.ekart.product.dto.RatingUpdateDTO;
 import com.infy.ekart.product.exception.EKartProductException;
 import com.infy.ekart.product.service.CustomerProductService;
+import com.infy.ekart.product.service.InventoryReservationService;
 
 @RestController
 @RequestMapping(value = "/product-api")
@@ -27,6 +32,9 @@ public class CustomerProductAPI {
 
 	@Autowired
 	private CustomerProductService customerProductService;
+
+	@Autowired
+	private InventoryReservationService inventoryReservationService;
 
 	@Autowired
 	private Environment environment;
@@ -56,6 +64,14 @@ public class CustomerProductAPI {
 		return new ResponseEntity<>(productDTO, HttpStatus.OK);
 	}
 
+	@GetMapping(value = "/products/{productId}/historical")
+	public ResponseEntity<ProductDTO> getProductForOrderHistory(@PathVariable Integer productId,
+			@org.springframework.web.bind.annotation.RequestHeader(value = "X-Internal-Service", required = false) String caller)
+			throws EKartProductException {
+		if (!"CustomerMS".equals(caller)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		return new ResponseEntity<>(customerProductService.getProductForOrderHistory(productId), HttpStatus.OK);
+	}
+
 	@PutMapping(value = "/update/{productId}")
 	public ResponseEntity<String> reduceAvailableQuantity(@PathVariable Integer productId,
 			@RequestBody Integer quantity) throws EKartProductException {
@@ -66,6 +82,26 @@ public class CustomerProductAPI {
 		customerProductService.reduceAvailableQuantity(productId, quantity);
 		String successMessage = environment.getProperty("ProductAPI.REDUCE_QUANTITY_SUCCESSFULL");
 		return new ResponseEntity<>(successMessage, HttpStatus.OK);
+	}
+
+	@PostMapping(value = "/orders/{orderId}/reserve")
+	public ResponseEntity<Void> reserveOrderInventory(@PathVariable Integer orderId,
+			@Valid @RequestBody InventoryReservationRequest request,
+			@org.springframework.web.bind.annotation.RequestHeader(value = "X-Internal-Service", required = false) String caller) throws EKartProductException {
+		if (!"CustomerMS".equals(caller)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		if (!orderId.equals(request.getOrderId())) {
+			throw new EKartProductException("ProductService.RESERVATION_CONFLICT", HttpStatus.CONFLICT);
+		}
+		inventoryReservationService.reserve(request);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	@PutMapping(value = "/orders/{orderId}/release")
+	public ResponseEntity<Void> releaseOrderInventory(@PathVariable Integer orderId,
+			@org.springframework.web.bind.annotation.RequestHeader(value = "X-Internal-Service", required = false) String caller) throws EKartProductException {
+		if (!"CustomerMS".equals(caller)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		inventoryReservationService.release(orderId);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
 	/**

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.infy.ekart.payment.dto.PaymentTransactionDTO;
 import com.infy.ekart.payment.dto.VerifyPaymentRequestDTO;
@@ -44,6 +45,7 @@ public class PaymentAPI {
 	public ResponseEntity<PaymentTransactionDTO> createPaymentOrder(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId,
 			@NotNull(message = "{orderId.absent}") @PathVariable Integer orderId) throws EKartPaymentException {
+		if (!isCurrentCustomer(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		LOGGER.info("Creating Razorpay order for order " + orderId + ", customer " + customerEmailId);
 		return new ResponseEntity<>(paymentService.createPaymentOrder(customerEmailId, orderId), HttpStatus.CREATED);
 	}
@@ -52,8 +54,24 @@ public class PaymentAPI {
 	public ResponseEntity<PaymentTransactionDTO> verifyPayment(
 			@Pattern(regexp = "[a-zA-Z0-9._]+@[a-zA-Z]{2,}\\.[a-zA-Z][a-zA-Z.]+", message = "{invalid.email.format}") @PathVariable String customerEmailId,
 			@Valid @RequestBody VerifyPaymentRequestDTO request) throws EKartPaymentException {
+		if (!isCurrentCustomer(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		LOGGER.info("Verifying payment for order " + request.getOrderId() + ", customer " + customerEmailId);
 		return new ResponseEntity<>(paymentService.verifyPayment(customerEmailId, request), HttpStatus.OK);
+	}
+
+	@PostMapping(value = "/customer/{customerEmailId:.+}/order/{orderId}/cancel-payment")
+	public ResponseEntity<Void> cancelPayment(@PathVariable String customerEmailId,
+			@NotNull @PathVariable Integer orderId) throws EKartPaymentException {
+		if (!isCurrentCustomer(customerEmailId)) return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		paymentService.cancelPayment(customerEmailId, orderId);
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+	private boolean isCurrentCustomer(String email) {
+		org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return authentication != null && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)
+				&& !"anonymousUser".equals(authentication.getPrincipal()) && authentication.getPrincipal() instanceof String
+				&& email.equalsIgnoreCase((String) authentication.getPrincipal());
 	}
 
 }

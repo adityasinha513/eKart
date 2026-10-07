@@ -19,6 +19,14 @@ public class OrderedProduct {
 	// Price actually paid per unit at order time (after any offer discount), so historical
 	// orders show what was paid regardless of how the product's live price changes later.
 	private Double unitPrice;
+	private String productNameSnapshot;
+	@javax.persistence.Column(length = 2000)
+	private String descriptionSnapshot;
+	@javax.persistence.Column(length = 1000)
+	private String imageUrlSnapshot;
+	private String categorySnapshot;
+	private String unitSnapshot;
+	private Integer unitQuantitySnapshot;
 
 	public Integer getOrderedProductId() {
 		return orderedProductId;
@@ -44,5 +52,17 @@ public class OrderedProduct {
 	public void setUnitPrice(Double unitPrice) {
 		this.unitPrice = unitPrice;
 	}
+	public String getProductNameSnapshot() { return productNameSnapshot; }
+	public void setProductNameSnapshot(String value) { this.productNameSnapshot = value; }
+	public String getDescriptionSnapshot() { return descriptionSnapshot; }
+	public void setDescriptionSnapshot(String value) { this.descriptionSnapshot = value; }
+	public String getImageUrlSnapshot() { return imageUrlSnapshot; }
+	public void setImageUrlSnapshot(String value) { this.imageUrlSnapshot = value; }
+	public String getCategorySnapshot() { return categorySnapshot; }
+	public void setCategorySnapshot(String value) { this.categorySnapshot = value; }
+	public String getUnitSnapshot() { return unitSnapshot; }
+	public void setUnitSnapshot(String value) { this.unitSnapshot = value; }
+	public Integer getUnitQuantitySnapshot() { return unitQuantitySnapshot; }
+	public void setUnitQuantitySnapshot(Integer value) { this.unitQuantitySnapshot = value; }
 
 }
